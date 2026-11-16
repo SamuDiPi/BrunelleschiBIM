@@ -57,13 +57,14 @@ get a valid IFC4 file and a plan in SVG.
       walls at a point, non-zero-angle near-parallel walls).
 
 ### M4 Hosted door and window
-- [ ] A door and a window are placed in a wall by distance along the wall; windows have a
+- [x] A door and a window are placed in a wall by distance along the wall; windows have a
       sill height.
-- [ ] The host wall's derived geometry has the opening; moving or resizing the hosted
+- [x] The host wall's derived geometry has the opening; moving or resizing the hosted
       element moves or resizes the opening.
-- [ ] Moving or lengthening the wall keeps the hosted elements at their distance; an
+- [x] Moving or lengthening the wall keeps the hosted elements at their distance; an
       element that no longer fits is reported, not silently dropped.
-- [ ] Deleting a wall deletes its hosted elements in the same transaction.
+- [x] Deleting a wall deletes its hosted elements in the same transaction. File format
+      version 3 stores doors and windows.
 
 ### M5 IFC4 export
 - [ ] Export contains project, site, building, storeys, walls, opening elements, door and

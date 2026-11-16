@@ -3,6 +3,51 @@
 One entry per working session: what was decided, what was verified, what is open. Newest
 first.
 
+## 2026-11-16: M4 hosted door and window
+
+**Decided**
+
+- `Door` and `Window` share a base: host wall, `position` (distance from the wall's
+  start to the element's *centre*, so resizing keeps it centred), `width`, `height`,
+  `sill_height` above the wall's base. Doors also have `swing_side` (left/right, seen
+  from the wall's start) and `hinge` (the jamb nearer the wall's start or end): explicit
+  names instead of Revit's two "flip" toggles. Windows have no inside/outside yet; it
+  will be added with a migration when IFC export or plans need it.
+- Position is relative to the wall's start. Moving the start therefore moves the
+  elements with it (Revit keeps them fixed in space instead); stated, tested.
+- Hard errors (the change is refused, naming the element): an element not fitting the
+  wall along or in height, overlapping elements in one wall, invalid sizes. This applies
+  to indirect changes too: shortening a wall, lowering a level, so nothing is ever
+  dropped silently.
+- Warnings (`bbim check`): an opening reaching into the corner join at a wall end, or a
+  wall meeting the host in a T inside the opening (at heights the opening spans).
+- Openings are derived: a plan rectangle across the full wall thickness plus absolute
+  bottom and top. `WallGeometry.plan_cut(z)` gives wall outlines cut at an elevation with
+  the openings that plane crosses removed; M6 builds on it.
+- File format version 3 adds `doors` and `windows` arrays; migration 2 -> 3 with a real
+  version 2 sample; schemas 1 and 2 stay frozen.
+
+**Verified**
+
+- 241 tests pass on Python 3.13 and 3.11; ruff and mypy strict clean.
+- Real CLI session on the house file (a real version 2 file, upgraded on load): two
+  doors and three windows placed (one refused: it reached past the wall start);
+  `bbim check` found the window that the partition meets; lowering the first floor to
+  2.20 m was refused naming the door and window that would not fit; shortening the wall
+  was refused naming the window; an overlapping door was refused; raising the level
+  moved six walls; deleting the partition deleted its door. The file validates against
+  `schemas/bbim-3.schema.json`.
+- Found by tests: the first "blocked opening" check intersected the opening with other
+  walls' footprints, which reported corner walls twice and never caught tees (a tee
+  stops at the face, so it only touches the opening). Replaced by a check on tee joins.
+
+**Open**
+
+- Error messages about an element that failed to be created still mention an id the
+  user never saw (also for walls, see M2).
+- Elements on walls with a vertical extent that changes along the wall (none yet) and
+  elements spanning joins are not handled beyond the warning.
+
 ## 2026-11-16: M3 wall joins
 
 **Decided**

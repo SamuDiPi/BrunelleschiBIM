@@ -55,7 +55,7 @@ touching the model.
 |---|---|---|
 | `Level` | name, elevation | none |
 | `Wall` | start point, end point, thickness, base offset, top offset or unconnected height | base level, optional top level |
-| `Door`, `Window` | width, height, sill height, distance along host, flip | host wall |
+| `Door`, `Window` | width, height, sill height, distance of the centre along the host; doors: swing side and hinge jamb | host wall |
 
 - Lengths are stored in metres as floats. Comparisons use a documented tolerance.
 - Derived state is never written to the project file: wall footprint polygons, join
@@ -70,8 +70,9 @@ what each wall's geometry depends on (centre line, thickness, vertical extent) w
 it saw last time, and recomputes only the join points at the old and new ends of changed
 walls and along their centre lines. Commands do not notify the cache, so no change can
 be missed, and a rolled-back transaction needs no special handling. The explicit
-dependency graph below is the target once more element types depend on each other
-(hosted openings, M4).
+dependency graph below is the target once derived state gets expensive beyond walls.
+Door and window openings (M4) are cheap and recomputed at each query from the cached
+wall lines.
 
 Cost: a full rebuild is O(n²) in the number of walls (about 0.45 s for 480 walls on
 the owner's machine; 0.1 s to update after one change). A spatial index (Shapely

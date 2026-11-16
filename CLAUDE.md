@@ -12,8 +12,8 @@ the ADRs in `docs/adr/` before changing anything they cover.
 ## Current state
 
 Phase 0 approved. M0, M1 (project, levels, `.bbim` file), M2 (walls bound to levels,
-file version 2) and M3 (wall joins, `regen/` cache) done; next is M4 (hosted door and
-window). See `docs/ROADMAP.md`.
+file version 2), M3 (wall joins, `regen/` cache) and M4 (doors and windows, file
+version 3) done; next is M5 (IFC4 export). See `docs/ROADMAP.md`.
 
 File format changes: add `storage/schema_v<n>.py`, a migration in
 `storage/migrations.py`, a sample of the previous version in `tests/data/`, and publish
