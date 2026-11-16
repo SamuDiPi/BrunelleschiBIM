@@ -124,9 +124,9 @@ and ortho, doors and windows by clicking a wall, select, move, delete.
       can be undone. Checked with pytest-qt and window captures.
 
 ### M11 Editing in plan
-- [ ] Draw walls with endpoint and grid snaps and ortho; place doors and windows by
+- [x] Draw walls with endpoint and grid snaps and ortho; place doors and windows by
       clicking a wall; select, move and delete.
-- [ ] The M7 house can be rebuilt with the mouse (scripted with pytest-qt); every step
+- [x] The M7 house can be rebuilt with the mouse (scripted with pytest-qt); every step
       undoes.
 
 ### M12 3D view

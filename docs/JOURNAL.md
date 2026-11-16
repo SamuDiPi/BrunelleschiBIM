@@ -3,6 +3,48 @@
 One entry per working session: what was decided, what was verified, what is open. Newest
 first.
 
+## 2026-11-16: M11 editing in plan
+
+**Decided**
+
+- Core commands `move_wall(project, wall, dx, dy)` and `move_wall_end(project, wall,
+  "start"|"end", point)`: by default the ends of other walls that meet the moved ends
+  follow, so corners stay joined (as in Revit). In the core because scripts need them too.
+  Walls meeting the moved wall in a T do not follow yet.
+- Plan tools: Select (click; drag a wall, an end grip, or a door or window along its
+  wall; Delete), Wall (chain of clicks, each wall one undo step; Esc or right click ends),
+  Door and Window (click a wall; a door opens towards the side clicked; the position is
+  kept inside the wall). Mouse: wheel zoom, middle or right drag to pan, right click to
+  end. Shortcuts S, W, D, N, F8 (ortho), Delete, plus "Add level" (3 m above the highest).
+- Snaps by priority: wall endpoint, point on a wall's centre line (makes T joins), grid
+  (0.10 m). Ortho with Shift or F8; an endpoint still wins over ortho. Snapping, picking,
+  grips and side detection are pure functions in `gui/snap.py`.
+- The status bar has two parts: messages on the left (what was refused and why), cursor
+  coordinates, snap kind and tool hint on the right.
+- Wall walls drawn on a level get the next level above as their top, or a 3.00 m
+  unconnected height if there is none; thickness from the toolbar (0.30 by default).
+
+**Verified**
+
+- 503 tests pass on Python 3.13 and 3.11; ruff and mypy strict clean. Simulated mouse
+  sessions (pytest-qt, offscreen) rebuild the M7 house with clicks only: four walls with
+  four mitres, an inward-opening door at 1.50 m, a window at 3.00 m, valid IFC; undoing
+  gives back the empty project byte for byte, step labels in the expected order; dragging
+  a corner grip, a whole wall and a door; Esc, ortho with Shift, refusals.
+- Captures of a scripted session were looked at: the wall preview with the endpoint snap
+  marker, and the finished house with a partition making two T joins.
+
+**Found by looking at the captures (not by the tests)**
+
+- A partition drawn onto walls ended at x = 3.008 and a window at 3.01 m: the point "on
+  a wall" kept the cursor's position along the wall, precise only to a screen pixel
+  (1.7 cm at that zoom). Now the grid point is projected onto the wall, and door and
+  window positions snap to the grid; a test pins it.
+- An error message was overwritten at once by the cursor coordinates in the same status
+  label; a test had passed only because the tool hint contained the same words.
+- Dragging a wall gave 5.999999999999999 instead of 6 (the grab point came from an "on
+  wall" snap); the move is now between grid points, rounded to the micrometre.
+
 ## 2026-11-16: M10 main window
 
 **Decided**
