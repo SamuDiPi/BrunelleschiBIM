@@ -1,0 +1,5 @@
+# One line ending everywhere: project files and golden test files must be byte-identical
+# on Windows and Linux.
+* text=auto eol=lf
+*.png binary
+*.ico binary

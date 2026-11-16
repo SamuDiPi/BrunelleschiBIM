@@ -1,0 +1,66 @@
+[project]
+name = "brunelleschi"
+version = "0.1.0.dev0"
+description = "Open-source BIM authoring: a relational parametric model with drawings and IFC derived from it."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "LGPL-3.0-or-later"
+license-files = ["LICENSE", "COPYING"]
+authors = [{ name = "BrunelleschiBIM contributors" }]
+keywords = ["bim", "ifc", "architecture", "cad"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering",
+]
+# Runtime dependencies are added by the milestone that first needs them
+# (see docs/ROADMAP.md), each pinned and recorded in an ADR.
+dependencies = []
+
+[project.scripts]
+bbim = "brunelleschi.cli:main"
+
+[project.urls]
+Repository = "https://github.com/SamuDiPi/BrunelleschiBIM"
+
+[dependency-groups]
+dev = [
+    "mypy>=1.13",
+    "pytest>=8",
+    "ruff>=0.8",
+]
+
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/brunelleschi"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --strict-config"
+xfail_strict = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",  # pycodestyle
+    "F",       # pyflakes
+    "I",       # import order
+    "B",       # bugbear
+    "UP",      # modern syntax
+    "SIM",     # simplifications
+    "PTH",     # pathlib over os.path
+    "RUF",     # ruff's own rules
+]
+
+[tool.mypy]
+strict = true
+files = ["src", "tests"]
+warn_unreachable = true
