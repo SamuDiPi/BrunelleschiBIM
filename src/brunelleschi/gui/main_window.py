@@ -102,6 +102,9 @@ class MainWindow(QMainWindow):
         self.export_ifc_action = self._action("Export &IFC...", self.export_ifc_dialog)
         self.link_ifc_action = self._action("&Link IFC...", self.link_ifc_dialog)
         self.export_plan_action = self._action("Export &plan as SVG...", self.export_plan_dialog)
+        self.export_dxf_action = self._action(
+            "Export plan as &DXF (CartesioCAD)...", self.export_dxf_dialog
+        )
         self.quit_action = self._action("&Quit", self.close, std.Quit)
         self.undo_action = self._action("&Undo", self.undo, std.Undo)
         self.redo_action = self._action("&Redo", self.redo, std.Redo)
@@ -138,6 +141,7 @@ class MainWindow(QMainWindow):
         file_menu.addSeparator()
         file_menu.addAction(self.export_ifc_action)
         file_menu.addAction(self.export_plan_action)
+        file_menu.addAction(self.export_dxf_action)
         file_menu.addSeparator()
         file_menu.addAction(self.quit_action)
         edit_menu = self.menuBar().addMenu("&Edit")
@@ -399,6 +403,28 @@ class MainWindow(QMainWindow):
         )
         if name:
             self.export_plan_to(Path(name))
+
+    def export_dxf_to(self, path: Path) -> bool:
+        """The plan of the level shown, as an editable DXF at real size (millimetres)."""
+        level_id = self.plan.level_id
+        if level_id is None:
+            self.show_error("there is no level to draw")
+            return False
+        try:
+            api.write_plan_dxf(self.document.project, level_id, path)
+        except (api.BrunelleschiError, OSError) as exc:
+            self.show_error(f"Cannot export {path.name}: {exc}")
+            return False
+        level = self.document.project.level(level_id).name
+        self.status.setText(f"Exported the plan of {level!r} as DXF (millimetres) to {path}")
+        return True
+
+    def export_dxf_dialog(self) -> None:
+        name, _ = QFileDialog.getSaveFileName(
+            self, "Export plan as DXF", self._default_name(".dxf"), "DXF drawing (*.dxf)"
+        )
+        if name:
+            self.export_dxf_to(Path(name))
 
     def closeEvent(self, event: QCloseEvent) -> None:
         if self.confirm_discard():

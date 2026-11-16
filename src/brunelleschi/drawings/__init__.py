@@ -26,6 +26,18 @@ def plan_svg(
     return to_svg(plan_view(project, lv.id, cut_height), sheet, title)
 
 
+def write_plan_dxf(
+    project: Project,
+    level: UUID | str,
+    path: str | os.PathLike[str],
+    cut_height: float = DEFAULT_CUT_HEIGHT,
+) -> None:
+    """The plan of a level as an editable DXF at real size, in millimetres."""
+    from brunelleschi.drawings.dxf import write_dxf  # ezdxf loads only when needed
+
+    write_dxf(plan_view(project, project.level(level).id, cut_height), path)
+
+
 def write_plan_svg(
     project: Project,
     level: UUID | str,
@@ -45,5 +57,6 @@ __all__ = [
     "plan_svg",
     "plan_view",
     "to_svg",
+    "write_plan_dxf",
     "write_plan_svg",
 ]

@@ -40,7 +40,7 @@ from brunelleschi.commands import (
     undo,
     undo_label,
 )
-from brunelleschi.drawings import Sheet, plan_svg, plan_view, write_plan_svg
+from brunelleschi.drawings import Sheet, plan_svg, plan_view, write_plan_dxf, write_plan_svg
 from brunelleschi.errors import (
     AmbiguousReferenceError,
     BrunelleschiError,
@@ -139,5 +139,6 @@ __all__ = [
     "undo",
     "undo_label",
     "wall_geometry",
+    "write_plan_dxf",
     "write_plan_svg",
 ]

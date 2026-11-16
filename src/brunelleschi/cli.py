@@ -407,8 +407,15 @@ def _scale(text: str) -> float:
 
 def _cmd_plan(args: argparse.Namespace) -> int:
     project = api.load(args.file)
-    sheet = api.Sheet(paper=args.paper, portrait=args.portrait, scale=args.scale)
     level = project.level(args.level)
+    if str(args.output).lower().endswith(".dxf"):
+        api.write_plan_dxf(project, level.id, args.output, args.cut)
+        print(
+            f"wrote {args.output}: plan of {level.name!r} cut at {args.cut:.2f} m, "
+            "DXF at real size in millimetres"
+        )
+        return EXIT_OK
+    sheet = api.Sheet(paper=args.paper, portrait=args.portrait, scale=args.scale)
     api.write_plan_svg(project, level.id, args.output, sheet, args.cut)
     print(
         f"wrote {args.output}: plan of {level.name!r} cut at {args.cut:.2f} m, "
@@ -474,10 +481,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("ifc", help="the .ifc file")
     p.set_defaults(func=_cmd_ifc_validate)
 
-    p = sub.add_parser("plan", help="draw the plan of a level as SVG, at a scale on paper")
+    p = sub.add_parser(
+        "plan", help="draw the plan of a level: SVG at a scale on paper, or DXF at real size"
+    )
     p.add_argument("file", help="the .bbim project")
     p.add_argument("level", help="level name")
-    p.add_argument("output", help="the .svg file to write")
+    p.add_argument("output", help="the .svg or .dxf file to write")
     p.add_argument(
         "--cut", type=_metres, default=1.2, help="cut height above the level (default 1.20 m)"
     )

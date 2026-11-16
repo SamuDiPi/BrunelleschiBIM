@@ -86,7 +86,7 @@ def test_opens_the_house(window: MainWindow, house_file: Path) -> None:
     ]
     assert window.level_combo.count() == 2
     assert window.level_combo.currentText().startswith("Piano terra")
-    layers = {p.layer for p in window.plan.drawing.primitives}
+    layers = {p.layer for p in window.plan.drawing.flat()}
     assert {"wall-cut", "door", "door-swing", "window"} <= layers
     assert not window.undo_action.isEnabled()
 
@@ -202,7 +202,7 @@ def test_deleting_the_selected_element_by_undo_clears_the_panel(window: MainWind
 def test_level_switch_changes_the_plan(window: MainWindow) -> None:
     window.level_combo.setCurrentIndex(0)  # highest first: Primo piano
     assert window.plan.level_id == window.document.project.level("Primo piano").id
-    assert not [p for p in window.plan.drawing.primitives if p.layer == "wall-cut"]
+    assert not [p for p in window.plan.drawing.flat() if p.layer == "wall-cut"]
 
 
 # ------------------------------------------------------------------ files
@@ -299,3 +299,17 @@ def test_plan_keeps_fitting_until_the_user_navigates(window: MainWindow, qtbot: 
     window.resize(900, 600)
     qtbot.wait(10)
     assert window.plan.scale == 10.0
+
+
+def test_export_dxf(window: MainWindow, tmp_path: Path) -> None:
+    from ezdxf.filemanagement import readfile
+
+    out = tmp_path / "pianta.dxf"
+    assert window.export_dxf_to(out)
+    assert "as DXF (millimetres)" in window.status.text()
+    doc = readfile(out)
+    assert {e.dxf.name for e in doc.modelspace().query("INSERT")} == {
+        "DOOR_900",
+        "WINDOW_1200x300",
+    }
+    assert not window.export_dxf_to(tmp_path / "missing" / "x.dxf")

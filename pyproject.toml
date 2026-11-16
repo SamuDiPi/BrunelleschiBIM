@@ -17,6 +17,7 @@ classifiers = [
 # Runtime dependencies are added by the milestone that first needs them
 # (see docs/ROADMAP.md), each pinned and recorded in an ADR.
 dependencies = [
+    "ezdxf>=1.4,<2",
     "ifcopenshell==0.9.0.post1",
     "pydantic>=2.10,<3",
     "shapely>=2.1,<3",
