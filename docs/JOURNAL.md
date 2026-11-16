@@ -3,6 +3,52 @@
 One entry per working session: what was decided, what was verified, what is open. Newest
 first.
 
+## 2026-11-16: M14 DXF for CartesioCAD
+
+**Decided**
+
+- Studied CartesioCAD's reader first (`src/core/io/DxfReader.cpp`): it writes its own
+  files in millimetres (`$INSUNITS` 4) as R2000, reads LINE, LWPOLYLINE, ARC, HATCH (polyline
+  and edge boundaries), BLOCK and INSERT. So the DXF is R2000, real size in millimetres.
+- ezdxf (MIT) is a runtime dependency, loaded only when a DXF is written.
+- The neutral drawing primitives gained `Block` and `Insert`: doors and windows are blocks
+  (`DOOR_900`, `WINDOW_1200x300`) placed with a rotation. SVG and the screen expand them
+  (the golden SVG files did not change by a byte); the DXF writes real BLOCK/INSERT, so all
+  doors of a size are one editable definition.
+- Mirrored doors use a mirrored definition (`DOOR_900_M`), never a negative insert scale:
+  CartesioCAD's handling of arcs in negatively scaled blocks could not be checked, and
+  some readers get it wrong.
+- Layers WALL-CUT (outline, 0.50), WALL-CUT-HATCH (solid hatch, grey), WALL-BELOW,
+  OPENING-ABOVE (DASHED), DOOR, DOOR-SWING, WINDOW, with colours and line weights.
+- `bbim plan ... plan.dxf` (format from the extension) and File > Export plan as DXF.
+  DXF files are written atomically like the other formats.
+
+**Verified**
+
+- 552 tests pass on Python 3.13 and 3.11; ruff and mypy strict clean.
+- CartesioCAD's own reader, through its `cartesio_dxfinfo` tool, reads the files with no
+  error, no ignored entity type and no insert without its block, with the expected counts
+  and extents in millimetres. The test runs when the tool is built next to this
+  repository and is skipped otherwise (CI).
+- For every door (both swing sides, both hinges, on a slanted wall) and window, ezdxf's
+  own expansion of the INSERT lands exactly on our plan's shapes.
+- Looked at the DXF as ezdxf draws it (`tools/dxf_preview.py`, new), side by side with our
+  SVG plan: they match.
+
+**Found**
+
+- The first mirrored-door comparison disagreed: ezdxf writes mirrored arcs with an
+  inverted extrusion, in object coordinates; the test read them as world coordinates.
+  That led to the decision above to avoid mirrored inserts altogether.
+- `tools/render_svg.py` sized images from the viewBox, which only works for our own SVGs;
+  it now uses the declared sheet size.
+
+**Open**
+
+- Not seen inside CartesioCAD's interface (it has no image export); the owner can open
+  `casa-brunelleschi-M14-pianta.dxf`.
+- References and a title block are not in the DXF yet.
+
 ## 2026-11-16: M13 IFC files as references
 
 **Decided**

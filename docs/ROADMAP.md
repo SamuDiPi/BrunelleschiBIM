@@ -151,10 +151,14 @@ open one.
       drawn in projection; moving a reference whose coordinates are far from ours.
 
 ### M14 DXF export for CartesioCAD
-- [ ] Editable plan in DXF: separate layers, cut walls as HATCH, doors and windows as
-      blocks, at real size in metres or millimetres (to decide with CartesioCAD's units).
-- [ ] The file is read without errors by CartesioCAD's `DxfReader` and looked at as an
-      image; `bbim plan --dxf` and a menu command.
+- [x] Editable plan in DXF: separate layers, cut walls as HATCH, doors and windows as
+      blocks, at real size in millimetres (as CartesioCAD's own files), DXF R2000.
+- [x] The file is read without errors by CartesioCAD's `DxfReader` (its
+      `cartesio_dxfinfo` tool, in the test suite when built next to this repository) and
+      looked at as an image through ezdxf's renderer; `bbim plan ... plan.dxf` and
+      File > Export plan as DXF.
+- [ ] Not yet: opened in CartesioCAD's interface by the owner; references and a title
+      block in the DXF.
 
 ### M15 Rooms, areas and Italian checks
 - [ ] Rooms derived from walls on a level: name, net area, perimeter, height; IfcSpace in

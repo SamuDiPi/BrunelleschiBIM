@@ -13,7 +13,8 @@ the ADRs in `docs/adr/` before changing anything they cover.
 
 Phase 0 approved. Phase 2 (first interface, M8-M15) is planned and approved; M8 is done
 (ADRs 0008 own OpenGL view, 0009 PyInstaller), M9 (undo/redo), M10 (main window), M11 (editing in plan), M12 (3D view)
-and M13 (IFC references, file version 5) are done, M14 (DXF for CartesioCAD) is next; see
+M13 (IFC references, file version 5) and M14 (DXF) are done; next, at the owner's
+request, a first executable (PyInstaller, ADR 0009) before M15; see
 `docs/ROADMAP.md`. Phase 1: M0, M1 (project, levels, `.bbim` file), M2 (walls bound to levels,
 file version 2), M3 (wall joins, `regen/` cache), M4 (doors and windows, file version 3)
 M5 (IFC4 export, file version 4), M6 (plan in SVG) and M7 (demonstration, `examples/`)
