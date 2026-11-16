@@ -3,6 +3,38 @@
 One entry per working session: what was decided, what was verified, what is open. Newest
 first.
 
+## 2026-11-16: M0 scaffolding and M1 project and levels
+
+**Decided**
+
+- The owner approved Phase 0. Forking Bonsai was discussed and rejected: Bonsai is a
+  Blender add-on where IFC is the native model, the opposite of ADR 0001, and it would
+  tie the program to Blender's GPL interface.
+- pydantic v2 adopted for the file format only (amendment to ADR 0003).
+- Levels are identified by UUID; names are unique ignoring case and surrounding spaces,
+  and the CLI refers to levels by name.
+- Transactions roll back to a snapshot that keeps object identity, so references held by
+  scripts stay valid after a failure. Undo/redo will replace snapshots with recorded
+  inverse operations later, without changing the API.
+- The `.bbim` writer normalises `-0.0` to `0.0` and refuses NaN/infinity.
+- The CLI accepts a decimal comma (`3,15`) and forces UTF-8 output, because a redirected
+  stream on Windows otherwise uses the legacy code page.
+
+**Verified**
+
+- 82 tests pass on Python 3.13 and 3.11; ruff and mypy strict are clean.
+- Real CLI session in a scratch folder: new, add (including a negative elevation and a
+  non-Latin name), duplicate refused with exit code 1, move, rename, list, `--json`
+  redirected to a file, info, `new` refusing to overwrite. The saved file validates
+  against `schemas/bbim-1.schema.json`.
+
+**Open**
+
+- CI result not visible from here (private repository, no `gh` login): the owner checks
+  the Actions tab.
+- `_dependents` in `commands/levels.py` is the hook that M2 fills in, so deleting a level
+  used by walls is refused.
+
 ## 2026-11-16: Phase 0, design
 
 **Decided with the owner**

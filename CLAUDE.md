@@ -11,13 +11,16 @@ the ADRs in `docs/adr/` before changing anything they cover.
 
 ## Current state
 
-Phase 0 (design) is written and waits for the owner's approval. No application code
-exists yet. Do not start Phase 1 before approval.
+Phase 0 approved. M0 (scaffolding) and M1 (project, levels, `.bbim` file) done; next
+is M2 (walls bound to levels). See `docs/ROADMAP.md`.
+
+When the file format changes, regenerate the published schema (`bbim schema`, written
+with LF endings to `schemas/bbim-<n>.schema.json`); `tests/test_schema.py` fails if it
+is out of date.
 
 ## Commands
 
-The project uses `uv`. These commands are the target for milestone M0; they do not work
-until the scaffolding exists.
+The project uses `uv`.
 
 ```
 uv sync                      # create/update the environment from the lock file

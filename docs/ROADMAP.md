@@ -10,7 +10,8 @@ Legend: `[ ]` not started, `[~]` in progress, `[x]` done.
 
 - [x] Library versions and status checked online and with a local probe (2026-11-16).
 - [x] VISION, ARCHITECTURE, ADRs 0001-0007, ROADMAP, CLAUDE.md written.
-- [ ] **Owner approval of Phase 0.** Nothing below starts before this.
+- [x] **Owner approval of Phase 0** (2026-11-16). Forking Bonsai was considered and
+      rejected: the project keeps its own parametric core.
 
 ## Phase 1: first vertical slice
 
@@ -18,19 +19,22 @@ Goal: from the command line and from a script, build a small model, change a lev
 get a valid IFC4 file and a plan in SVG.
 
 ### M0 Repository scaffolding
-- [ ] `uv sync` creates the environment from a lock file on a clean machine.
-- [ ] `uv run pytest`, `uv run ruff check`, `uv run ruff format --check` and
+- [x] `uv sync` creates the environment from a lock file on a clean machine.
+- [x] `uv run pytest`, `uv run ruff check`, `uv run ruff format --check` and
       `uv run mypy` all pass on an (almost) empty package.
-- [ ] `uv run bbim --version` prints the version.
-- [ ] `LICENSE` (LGPL-3.0) and `README.md` present.
-- [ ] CI runs the four commands on Windows and Linux for every push.
+- [x] `uv run bbim --version` prints the version.
+- [x] `LICENSE` (LGPL-3.0) and `README.md` present.
+- [~] CI runs the four commands on Windows and Linux for every push. The workflow is
+      in place; its result could not be read from here (private repository), so the
+      owner checks the Actions tab.
 
 ### M1 Project and levels
-- [ ] API and CLI create a project and add, rename, move and delete levels.
-- [ ] Save to `.bbim` and load back gives an equal model; saving twice gives identical
+- [x] API and CLI create a project and add, rename, move and delete levels.
+- [x] Save to `.bbim` and load back gives an equal model; saving twice gives identical
       bytes.
-- [ ] A file with an unknown newer `schema_version` is refused with a clear error.
-- [ ] JSON Schema for version 1 is generated and a saved file validates against it.
+- [x] A file with an unknown newer `schema_version` is refused with a clear error.
+- [x] JSON Schema for version 1 is generated, published in `schemas/bbim-1.schema.json`
+      (a test keeps it in sync) and a saved file validates against it.
 
 ### M2 Walls bound to levels
 - [ ] A straight wall has start, end, thickness, base level + offset, and either a top

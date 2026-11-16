@@ -35,7 +35,17 @@ Status: proposed (2026-11-16)
   heavy models.
 - **Rust.** Attractive for a kernel, but the IFC ecosystem is thin.
 
-## Open point
+## Amendment (2026-11-16, M1): pydantic for the file format only
 
-Model definitions and JSON Schema generation will probably use pydantic v2. To be
-confirmed and pinned in milestone M0 after checking its current version and licence.
+**pydantic v2** (MIT, 2.14 at the time) is a runtime dependency, pinned `>=2.10,<3`.
+It is used only in `storage/` to describe and validate the `.bbim` file and to generate
+its JSON Schema. The in-memory model stays plain dataclasses:
+
+- the file format is versioned and frozen per version, the model is not; keeping them
+  apart is what makes migrations possible;
+- commands change model objects all the time; pydantic validation on every assignment
+  would be slow and would duplicate the invariant checks that transactions already run
+  at commit.
+
+`jsonschema` is a development dependency, used by the tests to check that saved files
+validate against the published schema.
