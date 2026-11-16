@@ -3,6 +3,50 @@
 One entry per working session: what was decided, what was verified, what is open. Newest
 first.
 
+## 2026-11-16: M6 plan in SVG
+
+**Decided**
+
+- Pipeline as in ARCHITECTURE: `drawings/plan.py` turns the model into neutral 2D
+  primitives (areas, lines, arcs, texts) on named layers; `drawings/svg.py` plots them on
+  an ISO A sheet at a scale. The DXF writer for CartesioCAD will reuse the primitives.
+- Plan content at a cut height (default 1.20 m): cut walls as one filled mass with one
+  outline (their union); door leaf open at 90 degrees on the swing side from the hinge
+  jamb, with its arc; window as the two wall faces and a glass line; openings entirely
+  above the cut, dashed; walls of the level lower than the cut, thin outline. Openings
+  entirely below the cut (none in practice yet) are not drawn.
+- Paper: `width`/`height` in mm and a mm `viewBox`, so the file prints at scale; the
+  drawing is centred; if it does not fit inside 10 mm margins, a clear error with the
+  sizes. Pens: 0.50 cut outline, 0.35 door, 0.25 window and dashed openings, 0.18 swing
+  and projections; poché light grey (#a6a6a6) so dashed lines over it stay visible.
+- Output is deterministic (fixed number format, layer order, model order, no
+  timestamps). Golden files in `tests/golden/`, rewritten with `pytest --update-golden`
+  and accepted only after looking at them as images.
+- `tools/render_svg.py` renders SVG to PNG with QtSvg in a throwaway environment (PySide6
+  is not a project dependency); it opens no window.
+
+**Verified**
+
+- 293 tests pass on Python 3.13 and 3.11; ruff and mypy strict clean.
+- Looked at the plans as images (first visual check of the geometry in the project).
+  The first renders showed two defects no test caught: join lines between walls (each
+  wall outlined separately; also seams where fills meet), and the dashed high window
+  invisible under the dark poché. Fixed by filling and outlining the union, drawing
+  dashed openings above the poché and lightening it. Mitres, split-wall tees, a slanted
+  tee, both door swings and the windows were then checked by eye.
+- Text was missing in the first renders: Qt's offscreen platform on Windows has no fonts.
+  Not an SVG problem; the render tool uses the normal platform.
+- Real CLI session: plans of the house file at 1:50 on A3 and 1:100 on A4 portrait;
+  1:20 on A4 refused with the drawing and sheet sizes; an unknown level and a zero scale
+  refused.
+
+**Open**
+
+- No dimensions, room names, level marks, north arrow or title block beyond one line.
+- Per-wall identity is not kept on the merged poché (doors and windows keep theirs).
+- Walls of other storeys crossing the cut plane are cut too (correct for a cut, but no
+  distinction is drawn yet).
+
 ## 2026-11-16: M5 IFC4 export
 
 **Decided**

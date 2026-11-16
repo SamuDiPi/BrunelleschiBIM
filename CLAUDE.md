@@ -13,8 +13,11 @@ the ADRs in `docs/adr/` before changing anything they cover.
 
 Phase 0 approved. M0, M1 (project, levels, `.bbim` file), M2 (walls bound to levels,
 file version 2), M3 (wall joins, `regen/` cache), M4 (doors and windows, file version 3)
-and M5 (IFC4 export, file version 4) done, except M5's manual checks by the owner; next
-is M6 (plan in SVG). See `docs/ROADMAP.md`.
+M5 (IFC4 export, file version 4) and M6 (plan in SVG) done, except M5's manual checks by
+the owner; next is M7 (Phase 1 demonstration). See `docs/ROADMAP.md`.
+
+Look at drawings, do not only test them: render with `tools/render_svg.py` (see its
+docstring) and read the PNG. Golden files are accepted only after such a look.
 
 File format changes: add `storage/schema_v<n>.py`, a migration in
 `storage/migrations.py`, a sample of the previous version in `tests/data/`, and publish

@@ -77,10 +77,11 @@ get a valid IFC4 file and a plan in SVG.
       both recorded in `JOURNAL.md`.
 
 ### M6 Plan in SVG
-- [ ] `bbim plan` writes an SVG of a level cut 1.20 m above it: wall poché with joins,
+- [x] `bbim plan` writes an SVG of a level cut 1.20 m above it: wall poché with joins,
       door with swing, window symbol.
-- [ ] Output is deterministic and compared against golden files.
-- [ ] Scale and paper size options produce the stated dimensions in millimetres.
+- [x] Output is deterministic and compared against golden files (reviewed as images
+      before being accepted).
+- [x] Scale and paper size options produce the stated dimensions in millimetres.
 
 ### M7 Phase 1 demonstration
 - [ ] One script and one CLI session create levels, four walls with corners, a door and a
