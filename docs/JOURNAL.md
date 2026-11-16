@@ -21,7 +21,7 @@ first.
   grips and side detection are pure functions in `gui/snap.py`.
 - The status bar has two parts: messages on the left (what was refused and why), cursor
   coordinates, snap kind and tool hint on the right.
-- Wall walls drawn on a level get the next level above as their top, or a 3.00 m
+- Walls drawn on a level get the next level above as their top, or a 3.00 m
   unconnected height if there is none; thickness from the toolbar (0.30 by default).
 
 **Verified**
