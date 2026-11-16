@@ -28,6 +28,14 @@ Status: proposed (2026-11-16)
 - An element with a representation but no placement is reported as an error, so the
   validator does catch real mistakes.
 
+## Amendment (2026-11-16, M5)
+
+- Level 1 is in place: every IFC test validates with schema and EXPRESS rules, and a
+  test proves the validator reports a deliberately broken file.
+- Levels 2 and 3 need the owner (an upload under their account, a viewer on their
+  screen); they are tracked as open in `docs/ROADMAP.md` until recorded in the journal.
+- GlobalIds are derived from model ids, never random (rules in `brunelleschi/ifc/export.py`).
+
 ## Alternatives rejected
 
 - **IFC2x3.** Still widely exchanged, but lacks classes we want and is being retired.

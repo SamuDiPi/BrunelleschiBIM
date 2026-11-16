@@ -67,12 +67,13 @@ get a valid IFC4 file and a plan in SVG.
       version 3 stores doors and windows.
 
 ### M5 IFC4 export
-- [ ] Export contains project, site, building, storeys, walls, opening elements, door and
+- [x] Export contains project, site, building, storeys, walls, opening elements, door and
       window with correct void/fill relationships.
-- [ ] `ifcopenshell.validate` (schema + EXPRESS rules) reports zero issues in the test
+- [x] `ifcopenshell.validate` (schema + EXPRESS rules) reports zero issues in the test
       suite.
-- [ ] Exporting the same project twice gives the same GlobalIds.
-- [ ] Checked by hand: buildingSMART validation service result and one external viewer;
+- [x] Exporting the same project twice gives the same GlobalIds (project id added in file
+      format version 4).
+- [~] Checked by hand: buildingSMART validation service result and one external viewer;
       both recorded in `JOURNAL.md`.
 
 ### M6 Plan in SVG

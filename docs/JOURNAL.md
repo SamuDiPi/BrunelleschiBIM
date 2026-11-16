@@ -3,6 +3,59 @@
 One entry per working session: what was decided, what was verified, what is open. Newest
 first.
 
+## 2026-11-16: M5 IFC4 export
+
+**Decided**
+
+- IfcOpenShell pinned to `==0.9.0.post1`. All calls to it are in `brunelleschi.ifc`
+  (and the IFC tests); mypy's untyped-call check is relaxed for exactly those modules,
+  because the library is only partly typed.
+- Export is a pure function `Project -> ifcopenshell.file`, built entity by entity
+  (geometry by hand, `ifcopenshell.api` for units, contexts and relationships).
+- Mapping: storeys at level elevations; `IfcWall` (SOLIDWALL) in its base level's storey,
+  placed at its start along its direction, with an `Axis` polyline and a `Body` extruded
+  from the joined footprint (mitres and tees are in the IFC); per door/window an
+  `IfcOpeningElement` voiding the wall and an `IfcDoor`/`IfcWindow` filling it, in the
+  wall's storey, with a simple box body (no frame/leaf detail yet). Units: metre.
+- Door operation: the door's local y axis points to the swing side, and `OperationType`
+  is SINGLE_SWING_LEFT/RIGHT by the hinge side seen along that axis, per the IFC4
+  definition. Worth a look in a viewer that draws door swings.
+- GlobalIds: model elements use their UUID; derived entities use `uuid5(owner, role)`
+  (opening of a door, site and building of the project); relationships use their
+  subject (aggregates: the whole; containment: the storey; voids: the opening; fills:
+  the filling). An unknown relationship type makes export fail, so no random id can
+  slip in. Adding an element leaves every other id unchanged (tested).
+- The project needed its own stable id: file format version 4 adds `id`. Migration 3 -> 4
+  derives it from the file content (uuid5), so the same unsaved old file always exports
+  with the same identifiers.
+- `bbim ifc export FILE OUT [--validate]` and `bbim ifc validate FILE`. Without pytest
+  installed, validation runs the schema checks only and says so.
+
+**Verified**
+
+- 268 tests pass on Python 3.13 and 3.11; ruff and mypy strict clean.
+- Validation with schema and EXPRESS rules: zero issues on the test house, an empty
+  project and a minimal one; a deliberately broken door is reported, so the zero means
+  something.
+- Geometry checked through IfcOpenShell's own evaluation (`ifcopenshell.geom`): every
+  wall's volume equals its joined footprint area x height minus its openings; elevations
+  and the door's position match the model; moving a level changes storey elevation and
+  wall height in the export.
+- Real CLI session: the M4 house file (version 3, upgraded on load) exported as valid
+  IFC4 with schema and rules in under 2 s; two exports have identical GlobalIds (31).
+- Found by tests: my first "invalid file" example (a wall with only a GlobalId) is valid
+  IFC4, since every other IfcWall attribute is optional; the test now omits the GlobalId.
+
+**Open**
+
+- **Manual checks of ADR 0007 not done**: the buildingSMART validation service needs an
+  upload under the owner's account, and opening a viewer would mean driving the owner's
+  screen. The exported test house is ready for the owner to check.
+- The STEP header says `ViewDefinition [CoordinationView]` (IfcOpenShell's default,
+  an IFC2x3 view). Check what the buildingSMART service expects before changing it.
+- Header timestamp makes the file bytes differ between exports (ids do not).
+- No property sets, materials or wall types yet; windows have no inside/outside.
+
 ## 2026-11-16: M4 hosted door and window
 
 **Decided**
