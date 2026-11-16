@@ -7,6 +7,7 @@ do not notify the cache, so nothing can be forgotten: a value whose inputs are u
 is reused, everything else is recomputed.
 """
 
+from brunelleschi.regen.openings import OpeningGeometry
 from brunelleschi.regen.walls import (
     WallFootprint,
     WallGeometry,
@@ -14,4 +15,4 @@ from brunelleschi.regen.walls import (
     wall_geometry,
 )
 
-__all__ = ["WallFootprint", "WallGeometry", "WallGeometryCache", "wall_geometry"]
+__all__ = ["OpeningGeometry", "WallFootprint", "WallGeometry", "WallGeometryCache", "wall_geometry"]

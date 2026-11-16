@@ -110,7 +110,9 @@ def modify_wall(
 
 
 def delete_wall(project: Project, ref: UUID | str) -> Wall:
-    """Delete a wall."""
+    """Delete a wall, together with its doors and windows."""
     with transaction(project):
         wall = project.wall(ref)
+        for element in project.hosted_in(wall.id):
+            project._remove_hosted(element.id)
         return project._remove_wall(wall.id)

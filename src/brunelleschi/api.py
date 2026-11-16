@@ -15,10 +15,14 @@ are kept stable; internals may move.
 from __future__ import annotations
 
 from brunelleschi.commands import (
+    add_door,
     add_level,
     add_wall,
+    add_window,
+    delete_hosted,
     delete_level,
     delete_wall,
+    modify_hosted,
     modify_wall,
     rename_level,
     set_level_elevation,
@@ -34,15 +38,20 @@ from brunelleschi.errors import (
 )
 from brunelleschi.geometry import Join, JoinIssue, JoinKind
 from brunelleschi.model import (
+    Door,
+    HostedElement,
+    Jamb,
     Level,
     Point,
     Project,
+    Side,
     TopAtLevel,
     UnconnectedHeight,
     Wall,
+    Window,
     short_id,
 )
-from brunelleschi.regen import WallFootprint, WallGeometry, wall_geometry
+from brunelleschi.regen import OpeningGeometry, WallFootprint, WallGeometry, wall_geometry
 from brunelleschi.storage import CURRENT_SCHEMA_VERSION, dumps, json_schema, load, loads, save
 
 
@@ -57,29 +66,39 @@ __all__ = [
     "CURRENT_SCHEMA_VERSION",
     "AmbiguousReferenceError",
     "BrunelleschiError",
+    "Door",
+    "HostedElement",
+    "Jamb",
     "Join",
     "JoinIssue",
     "JoinKind",
     "Level",
     "ModelError",
     "NotFoundError",
+    "OpeningGeometry",
     "Point",
     "Project",
     "ProjectFileError",
+    "Side",
     "TopAtLevel",
     "UnconnectedHeight",
     "UnsupportedSchemaVersionError",
     "Wall",
     "WallFootprint",
     "WallGeometry",
+    "Window",
+    "add_door",
     "add_level",
     "add_wall",
+    "add_window",
+    "delete_hosted",
     "delete_level",
     "delete_wall",
     "dumps",
     "json_schema",
     "load",
     "loads",
+    "modify_hosted",
     "modify_wall",
     "new_project",
     "rename_level",

@@ -4,6 +4,7 @@ This package depends on nothing else in ``brunelleschi`` except ``errors``. It h
 and invariants; changes go through ``brunelleschi.commands``.
 """
 
+from brunelleschi.model.hosted import Door, HostedElement, Jamb, Side, Window
 from brunelleschi.model.level import Level
 from brunelleschi.model.project import Project, short_id
 from brunelleschi.model.units import LENGTH_TOLERANCE, MAX_ABS_COORDINATE, lengths_equal
@@ -12,13 +13,18 @@ from brunelleschi.model.wall import Point, TopAtLevel, UnconnectedHeight, Wall, 
 __all__ = [
     "LENGTH_TOLERANCE",
     "MAX_ABS_COORDINATE",
+    "Door",
+    "HostedElement",
+    "Jamb",
     "Level",
     "Point",
     "Project",
+    "Side",
     "TopAtLevel",
     "UnconnectedHeight",
     "Wall",
     "WallTop",
+    "Window",
     "lengths_equal",
     "short_id",
 ]

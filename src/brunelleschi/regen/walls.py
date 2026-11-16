@@ -6,7 +6,7 @@ import weakref
 from dataclasses import dataclass, field
 from uuid import UUID
 
-from shapely import Polygon
+from shapely import MultiPolygon, Polygon
 
 from brunelleschi.geometry.joins import (
     END,
@@ -23,6 +23,7 @@ from brunelleschi.geometry.joins import (
     solve_point,
 )
 from brunelleschi.model import Project, Wall
+from brunelleschi.regen.openings import OpeningGeometry, opening_issues, openings, plan_cut
 
 
 @dataclass(frozen=True, slots=True)
@@ -36,11 +37,18 @@ class WallFootprint:
 
 @dataclass(frozen=True, slots=True)
 class WallGeometry:
-    """Joins, footprints and join problems of every wall in a project."""
+    """Joins, footprints, openings and geometric problems of every wall in a project."""
 
     footprints: dict[UUID, WallFootprint]
     joins: tuple[Join, ...]
     issues: tuple[JoinIssue, ...]
+    openings: dict[UUID, OpeningGeometry]
+    lines: dict[UUID, WallLine]
+
+    def plan_cut(self, z: float) -> dict[UUID, Polygon | MultiPolygon]:
+        """Wall outlines cut at elevation ``z``, with the openings the plane crosses."""
+        shapes = {wid: f.polygon for wid, f in self.footprints.items()}
+        return plan_cut(shapes, self.lines, self.openings, z)
 
 
 def _line(project: Project, wall: Wall) -> WallLine:
@@ -139,15 +147,25 @@ class WallGeometryCache:
             polygon = Polygon(corners)
         self.footprints[line.id] = WallFootprint(line.id, tuple(corners), polygon)
 
-    def geometry(self) -> WallGeometry:
+    def geometry(self, project: Project) -> WallGeometry:
+        """Everything derived, for the project the cache was last updated with.
+
+        Openings are cheap and computed afresh; only joins and footprints are cached.
+        """
+        footprints = {wid: self.footprints[wid] for wid in self.lines}
+        found = openings(project, self.lines)
         joins = tuple(j for js, _ in self.points.values() for j in js)
         issues = [i for _, iss in self.points.values() for i in iss]
         issues += self.issues_by_wall.values()
         issues += crossings(list(self.lines.values()))
+        shapes = {wid: f.polygon for wid, f in footprints.items()}
+        issues += opening_issues(found, shapes, self.lines, joins)
         return WallGeometry(
-            footprints={wid: self.footprints[wid] for wid in self.lines},
+            footprints=footprints,
             joins=tuple(sorted(joins, key=lambda j: (j.point, j.walls))),
             issues=tuple(sorted(issues, key=lambda i: (i.point, i.walls))),
+            openings=found,
+            lines=dict(self.lines),
         )
 
 
@@ -166,7 +184,7 @@ def cache_for(project: Project) -> WallGeometryCache:
 
 
 def wall_geometry(project: Project) -> WallGeometry:
-    """Joins, footprints and join problems of every wall, brought up to date."""
+    """Joins, footprints, openings and geometric problems of every wall, up to date."""
     cache = cache_for(project)
     cache.update(project)
-    return cache.geometry()
+    return cache.geometry(project)

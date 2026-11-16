@@ -6,6 +6,7 @@ restored exactly as it was and the error propagates. A failed command never leav
 half-applied change.
 """
 
+from brunelleschi.commands.hosted import add_door, add_window, delete_hosted, modify_hosted
 from brunelleschi.commands.levels import (
     add_level,
     delete_level,
@@ -16,10 +17,14 @@ from brunelleschi.commands.transaction import transaction
 from brunelleschi.commands.walls import add_wall, delete_wall, modify_wall
 
 __all__ = [
+    "add_door",
     "add_level",
     "add_wall",
+    "add_window",
+    "delete_hosted",
     "delete_level",
     "delete_wall",
+    "modify_hosted",
     "modify_wall",
     "rename_level",
     "set_level_elevation",

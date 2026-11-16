@@ -8,6 +8,7 @@ from typing import ClassVar, TypeVar
 from uuid import UUID
 
 from brunelleschi.errors import AmbiguousReferenceError, ModelError, NotFoundError
+from brunelleschi.model.hosted import Door, HostedElement, Window
 from brunelleschi.model.level import Level
 from brunelleschi.model.units import LENGTH_TOLERANCE, MAX_ABS_COORDINATE, is_valid_length
 from brunelleschi.model.wall import TopAtLevel, Wall
@@ -37,11 +38,12 @@ class Project:
     """
 
     # The attributes that hold elements, by id. Transactions snapshot exactly these.
-    STORES: ClassVar[tuple[str, ...]] = ("_levels", "_walls")
+    STORES: ClassVar[tuple[str, ...]] = ("_levels", "_walls", "_hosted")
 
     name: str
     _levels: dict[UUID, Level] = field(default_factory=dict)
     _walls: dict[UUID, Wall] = field(default_factory=dict)
+    _hosted: dict[UUID, HostedElement] = field(default_factory=dict)
 
     # ------------------------------------------------------------------ levels
 
@@ -94,6 +96,33 @@ class Project:
             top = base + wall.top.height
         return base, top
 
+    def wall_height(self, wall: Wall) -> float:
+        base, top = self.wall_z_range(wall)
+        return top - base
+
+    # -------------------------------------------------------- doors and windows
+
+    @property
+    def hosted(self) -> list[HostedElement]:
+        """Doors and windows in creation order."""
+        return list(self._hosted.values())
+
+    @property
+    def doors(self) -> list[Door]:
+        return [e for e in self._hosted.values() if isinstance(e, Door)]
+
+    @property
+    def windows(self) -> list[Window]:
+        return [e for e in self._hosted.values() if isinstance(e, Window)]
+
+    def hosted_element(self, ref: UUID | str) -> HostedElement:
+        """A door or window by id, or by a unique id prefix."""
+        return _by_id(self._hosted, ref, "door or window")
+
+    def hosted_in(self, wall_id: UUID) -> list[HostedElement]:
+        """The doors and windows of a wall, in creation order."""
+        return [e for e in self._hosted.values() if e.host_id == wall_id]
+
     # --------------------------------------------------------------- mutations
 
     def _add_level(self, level: Level) -> None:
@@ -118,6 +147,17 @@ class Project:
         except KeyError:
             raise NotFoundError(f"no wall with id {wall_id}") from None
 
+    def _add_hosted(self, element: HostedElement) -> None:
+        if element.id in self._hosted:
+            raise ModelError(f"an element with id {element.id} already exists")
+        self._hosted[element.id] = element
+
+    def _remove_hosted(self, element_id: UUID) -> HostedElement:
+        try:
+            return self._hosted.pop(element_id)
+        except KeyError:
+            raise NotFoundError(f"no door or window with id {element_id}") from None
+
     # --------------------------------------------------------------- invariants
 
     def check(self) -> None:
@@ -126,7 +166,8 @@ class Project:
         if not self.name.strip():
             problems.append("the project name is empty")
         self._check_levels(problems)
-        self._check_walls(problems)
+        bad_walls = self._check_walls(problems)
+        self._check_hosted(problems, bad_walls)
         if problems:
             raise ModelError("; ".join(problems))
 
@@ -149,7 +190,9 @@ class Project:
                 )
             seen.setdefault(key, level)
 
-    def _check_walls(self, problems: list[str]) -> None:
+    def _check_walls(self, problems: list[str]) -> set[UUID]:
+        """Record wall problems; return the ids of walls too broken to host anything."""
+        bad: set[UUID] = set()
         for wall in self._walls.values():
             label = f"wall {short_id(wall.id)}"
             numbers = {
@@ -164,9 +207,10 @@ class Project:
                 numbers["top offset"] = wall.top.offset
             else:
                 numbers["height"] = wall.top.height
-            bad = [k for k, v in numbers.items() if not is_valid_length(v)]
-            if bad:
-                problems.append(f"{label}: {', '.join(bad)} {_LENGTH_RULE}")
+            invalid = [k for k, v in numbers.items() if not is_valid_length(v)]
+            if invalid:
+                problems.append(f"{label}: {', '.join(invalid)} {_LENGTH_RULE}")
+                bad.add(wall.id)
                 continue
             if wall.length <= LENGTH_TOLERANCE:
                 problems.append(f"{label}: start and end are the same point")
@@ -175,10 +219,68 @@ class Project:
             missing = [lid for lid in wall.level_ids() if lid not in self._levels]
             if missing:
                 problems.append(f"{label}: bound to a level that does not exist")
+                bad.add(wall.id)
                 continue
             base, top = self.wall_z_range(wall)
             if top - base <= LENGTH_TOLERANCE:
                 problems.append(f"{label}: top ({top:+.3f} m) must be above base ({base:+.3f} m)")
+        return bad
+
+    def _check_hosted(self, problems: list[str], bad_walls: set[UUID]) -> None:
+        tol = LENGTH_TOLERANCE
+        by_host: dict[UUID, list[HostedElement]] = {}
+        for e in self._hosted.values():
+            label = f"{e.kind} {short_id(e.id)}"
+            numbers = {
+                "position": e.position,
+                "width": e.width,
+                "height": e.height,
+                "sill height": e.sill_height,
+            }
+            invalid = [k for k, v in numbers.items() if not is_valid_length(v)]
+            if invalid:
+                problems.append(f"{label}: {', '.join(invalid)} {_LENGTH_RULE}")
+                continue
+            if e.width <= tol or e.height <= tol:
+                problems.append(f"{label}: width and height must be greater than zero")
+                continue
+            if e.sill_height < -tol:
+                problems.append(f"{label}: sill height must not be negative")
+                continue
+            wall = self._walls.get(e.host_id)
+            if wall is None:
+                problems.append(f"{label}: its host wall does not exist")
+                continue
+            if wall.id in bad_walls or wall.length <= tol:
+                continue  # the wall's own problem is already reported
+            where = f"wall {short_id(wall.id)}"
+            a, b = e.along()
+            if a < -tol or b > wall.length + tol:
+                problems.append(
+                    f"{label} does not fit in {where}: it spans {a:.3f} .. {b:.3f} m "
+                    f"along a wall {wall.length:.3f} m long"
+                )
+                continue
+            height = self.wall_height(wall)
+            if e.vertical()[1] > height + tol:
+                problems.append(
+                    f"{label} does not fit in {where}: its top is {e.vertical()[1]:.3f} m "
+                    f"above the wall base, the wall is {height:.3f} m high"
+                )
+                continue
+            by_host.setdefault(wall.id, []).append(e)
+        for wall_id, elements in by_host.items():
+            for i, e in enumerate(elements):
+                for f in elements[i + 1 :]:
+                    if _overlap(e.along(), f.along()) and _overlap(e.vertical(), f.vertical()):
+                        problems.append(
+                            f"{e.kind} {short_id(e.id)} and {f.kind} {short_id(f.id)} "
+                            f"overlap in wall {short_id(wall_id)}"
+                        )
+
+
+def _overlap(a: tuple[float, float], b: tuple[float, float]) -> bool:
+    return min(a[1], b[1]) - max(a[0], b[0]) > LENGTH_TOLERANCE
 
 
 _LENGTH_RULE = f"must be a finite number of metres within ±{MAX_ABS_COORDINATE:g}"
