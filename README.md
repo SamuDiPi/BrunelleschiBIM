@@ -103,6 +103,16 @@ The interface needs the `gui` extra outside the development environment:
 
 To look at an SVG drawing as an image, see [tools/render_svg.py](tools/render_svg.py).
 
+### The Windows executable
+
+```
+uv run --group build python tools/build_exe.py --check
+```
+
+builds `dist\BrunelleschiBIM\BrunelleschiBIM.exe` (a folder of about 300 MB that runs
+without Python; copy the whole folder) and checks it with its built-in self-tests.
+Unexpected errors are logged in `%LOCALAPPDATA%\BrunelleschiBIM\logs`.
+
 ## Licence
 
 LGPL-3.0-or-later. See [LICENSE](LICENSE) (GNU Lesser General Public License) and

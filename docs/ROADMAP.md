@@ -168,8 +168,11 @@ open one.
       owner on the text of the decree before they are coded.
 
 ### M16 Executable and demonstration
-- [ ] A Windows executable that starts on a machine without Python, opens and edits the
-      demo house, exports IFC, SVG and DXF.
+- [~] A Windows executable that starts on a machine without Python, opens and edits the
+      demo house, exports IFC, SVG and DXF. A first build exists (2026-11-16, at the
+      owner's request): `tools/build_exe.py --check` builds it and passes its self-tests
+      frozen, with no Python on the PATH. Still to do: installer, `.bbim` association,
+      icon, version information, build in CI, a demonstration on another machine.
 
 ## Later (not yet broken down)
 

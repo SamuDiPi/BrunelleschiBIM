@@ -55,3 +55,23 @@ PyInstaller executables) become a problem.
   start (slower, and more often flagged by antivirus).
 - A build script and a smoke test (the self-test above, run with no Python on the PATH)
   come with M15; an installer (for example Inno Setup) is a later, separate decision.
+
+## Amendment (2026-11-16): the first real build
+
+Built early, at the owner's request, after M14. `tools/build_exe.py` runs PyInstaller with
+the fixes listed above (all five were needed and worked first time) on
+`packaging/entry.py`; `--check` then runs the program's own self-tests
+(`brunelleschi.gui.selftest`) with no Python on the PATH, no console and a timeout.
+
+- 291 MB folder, built in about two minutes.
+- Frozen self-test: save and load, IFC export valid with schema and EXPRESS rules (pytest
+  ends up bundled by `--collect-all ifcopenshell`, so the rules do run), the IFC read back
+  as a reference through IfcOpenShell's geometry iterator, SVG, DXF, the main window built
+  in memory; and, separately, the 3D view drawn with OpenGL off screen. All pass.
+- An unknown argument exits with code 2 in half a second, without a window.
+- Unexpected errors, at start-up or inside Qt slots, go to
+  `%LOCALAPPDATA%\BrunelleschiBIM\logs\crash-*.log` with a short message box; never
+  PyInstaller's dialog.
+
+Still for M16: an installer (Start menu entry, `.bbim` association, icon), version
+information in the executable, and a build in CI.

@@ -13,8 +13,8 @@ the ADRs in `docs/adr/` before changing anything they cover.
 
 Phase 0 approved. Phase 2 (first interface, M8-M15) is planned and approved; M8 is done
 (ADRs 0008 own OpenGL view, 0009 PyInstaller), M9 (undo/redo), M10 (main window), M11 (editing in plan), M12 (3D view)
-M13 (IFC references, file version 5) and M14 (DXF) are done; next, at the owner's
-request, a first executable (PyInstaller, ADR 0009) before M15; see
+M13 (IFC references, file version 5) and M14 (DXF) are done, and a first executable
+exists (ADR 0009 amendment); M15 (rooms and Italian checks) is next; see
 `docs/ROADMAP.md`. Phase 1: M0, M1 (project, levels, `.bbim` file), M2 (walls bound to levels,
 file version 2), M3 (wall joins, `regen/` cache), M4 (doors and windows, file version 3)
 M5 (IFC4 export, file version 4), M6 (plan in SVG) and M7 (demonstration, `examples/`)
@@ -25,7 +25,8 @@ offscreen platform (set in `tests/conftest.py`); to look at the window, capture 
 `tools/capture_gui.py` (offscreen, Windows fonts, Arial) and read the PNG. The offscreen
 platform has no OpenGL on Windows: render the 3D view with `tools/render_3d.py` (normal
 platform, off-screen surface, no window). Packaged
-programs run only through a runner like `spikes/m8/runexe.py`.
+programs run only through `tools/build_exe.py --check` (or `--no-build`), which runs
+them without a console and with a timeout; never start BrunelleschiBIM.exe directly.
 
 Look at drawings, do not only test them: render with `tools/render_svg.py` (see its
 docstring) and read the PNG. Golden files are accepted only after such a look.

@@ -3,6 +3,44 @@
 One entry per working session: what was decided, what was verified, what is open. Newest
 first.
 
+## 2026-11-16: the first executable
+
+**Decided with the owner**
+
+- A first `BrunelleschiBIM.exe` now (after M14, before M15) rather than only in M16. The
+  installer, file association, icon and CI build stay in M16.
+- PyInstaller is in a separate `build` dependency group: `uv run --group build python
+  tools/build_exe.py --check`.
+
+**Done**
+
+- `packaging/entry.py`: the program's entry point. It refuses unknown arguments before a
+  window exists, installs `brunelleschi.gui.crash` (unexpected errors, also inside Qt
+  slots, go to a log file under `%LOCALAPPDATA%\BrunelleschiBIM\logs` with a short message,
+  never PyInstaller's dialog), and offers two hidden self-test modes.
+- `brunelleschi.gui.selftest`: save and load, IFC export and validation, the IFC read back
+  as a reference, SVG, DXF, the main window built in memory (offscreen platform); and the
+  3D view drawn off screen. Writes `report.json`.
+- `tools/build_exe.py`: builds with the ADR 0009 fixes, then runs both self-tests on the
+  frozen program with no Python on the PATH, no console, a timeout and process-tree kill.
+
+**Verified**
+
+- 556 tests pass on Python 3.13 and 3.11; ruff and mypy strict clean (mypy now also checks
+  `packaging/`).
+- Build: 291 MB, about two minutes. Frozen self-tests all pass, EXPRESS rules included;
+  the 3D drawing works; an unknown argument exits 2 in half a second. Looked at the
+  window image the frozen program produced.
+- No window was opened on the owner's screen: every run of the executable went through
+  the runner, and no process was left behind.
+- A copy for the owner is in `C:\Users\dipinto\BrunelleschiBIM\` (outside the repository,
+  so later builds do not touch it while it is open).
+
+**Open**
+
+- The interactive program has not been started by me (it would open a window on the
+  owner's screen); its first interactive use is the owner's.
+
 ## 2026-11-16: M14 DXF for CartesioCAD
 
 **Decided**
