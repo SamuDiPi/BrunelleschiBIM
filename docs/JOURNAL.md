@@ -31,10 +31,14 @@ first.
   process tree killed), the probe refuses unknown arguments, and the fixes are written in
   ADR 0009 for the real build.
 
+**Decided by the owner**
+
+- ADR 0008 accepted: own OpenGL 3.3 view behind a `Viewport` interface.
+- ADR 0009 accepted: PyInstaller, one-folder build. ADR 0005 amended. M8 closed; M9
+  (undo and redo in the core) is next.
+
 **Open**
 
-- The owner decides ADRs 0008 (recommended: own OpenGL behind a `Viewport` interface)
-  and 0009 (recommended: PyInstaller one-folder). Then ADR 0005 is updated and M9 starts.
 - Not measured: a packaged VTK build (its size is estimated from the installed files),
   Nuitka and Briefcase.
 

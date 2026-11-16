@@ -33,6 +33,13 @@ CAD, C++/Qt, GPL-3.0). The core is headless first.
 - DXF exchange is one-way at first: edits made in CartesioCAD do not flow back into the
   model.
 
+## Amendment (2026-11-16, M8)
+
+- 3D view: our own OpenGL 3.3 view in Qt, behind a `Viewport` interface (ADR 0008).
+  Qt Quick 3D is GPLv3-only and Qt 3D is deprecated; both are excluded.
+- Packaging: PyInstaller, one-folder build (ADR 0009). Measured size 269 MB, smaller
+  than estimated above; start-up about 1 s.
+
 ## Alternatives rejected
 
 - **Blender add-on (like Bonsai).** Excellent viewport for free, but not a standalone
