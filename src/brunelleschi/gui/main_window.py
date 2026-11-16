@@ -15,7 +15,9 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QMainWindow,
     QMessageBox,
+    QSplitter,
     QToolBar,
+    QWidget,
 )
 
 from brunelleschi import api
@@ -23,6 +25,8 @@ from brunelleschi.gui.browser import ProjectBrowser
 from brunelleschi.gui.document import Document
 from brunelleschi.gui.plan_view import PlanView
 from brunelleschi.gui.properties import PropertiesPanel
+from brunelleschi.gui.renderer import gl_unavailable_reason
+from brunelleschi.gui.viewport import Viewport3D
 
 FILE_FILTER = "BrunelleschiBIM project (*.bbim)"
 
@@ -34,7 +38,23 @@ class MainWindow(QMainWindow):
         self.plan = PlanView(self.document)
         self.browser = ProjectBrowser(self.document)
         self.properties = PropertiesPanel(self.document)
-        self.setCentralWidget(self.plan)
+        self.viewport = Viewport3D(self.document)
+        # Where OpenGL 3.3 is missing (old drivers, virtual machines), say so instead of
+        # showing an empty panel. The viewport object still follows the model.
+        reason = gl_unavailable_reason()
+        if reason is None:
+            self.view_3d: QWidget = self.viewport
+        else:
+            self.viewport.unavailable = reason
+            label = QLabel(f"3D view unavailable: {reason}.\nThe plan and everything else work.")
+            label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            label.setWordWrap(True)
+            self.view_3d = label
+        self.views = QSplitter(Qt.Orientation.Horizontal)
+        self.views.addWidget(self.plan)
+        self.views.addWidget(self.view_3d)
+        self.views.setSizes([1, 1])
+        self.setCentralWidget(self.views)
         self._dock("Project", self.browser, Qt.DockWidgetArea.LeftDockWidgetArea)
         self._dock("Properties", self.properties, Qt.DockWidgetArea.RightDockWidgetArea)
         self.status = QLabel()  # messages: what happened, what was refused and why
@@ -81,6 +101,10 @@ class MainWindow(QMainWindow):
         self.undo_action = self._action("&Undo", self.undo, std.Undo)
         self.redo_action = self._action("&Redo", self.redo, std.Redo)
         self.fit_action = self._action("&Fit plan", self.plan.fit, "F")
+        self.fit_3d_action = self._action("Fit &3D", self.viewport.fit, "Shift+F")
+        self.show_3d_action = self._action("3D &view", self._toggle_3d, "F3")
+        self.show_3d_action.setCheckable(True)
+        self.show_3d_action.setChecked(True)
         self.delete_action = self._action("&Delete", self.delete_selected, std.Delete)
         self.add_level_action = self._action("Add &level", self.add_level)
         self.ortho_action = self._action("&Ortho", self._toggle_ortho, "F8")
@@ -122,6 +146,8 @@ class MainWindow(QMainWindow):
         draw_menu.addAction(self.ortho_action)
         view_menu = self.menuBar().addMenu("&View")
         view_menu.addAction(self.fit_action)
+        view_menu.addAction(self.fit_3d_action)
+        view_menu.addAction(self.show_3d_action)
 
     def _toolbar(self) -> None:
         bar = QToolBar("Main")
@@ -174,6 +200,9 @@ class MainWindow(QMainWindow):
     def _level_chosen(self) -> None:
         value = self.level_combo.currentData()
         self.plan.set_level(UUID(value) if value else None)
+
+    def _toggle_3d(self) -> None:
+        self.view_3d.setVisible(self.show_3d_action.isChecked())
 
     def _toggle_ortho(self) -> None:
         self.plan.ortho = self.ortho_action.isChecked()
