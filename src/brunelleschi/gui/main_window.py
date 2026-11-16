@@ -6,12 +6,13 @@ from pathlib import Path
 from uuid import UUID
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QAction, QCloseEvent, QKeySequence
+from PySide6.QtGui import QAction, QActionGroup, QCloseEvent, QKeySequence
 from PySide6.QtWidgets import (
     QComboBox,
     QDockWidget,
     QFileDialog,
     QLabel,
+    QLineEdit,
     QMainWindow,
     QMessageBox,
     QToolBar,
@@ -36,10 +37,12 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.plan)
         self._dock("Project", self.browser, Qt.DockWidgetArea.LeftDockWidgetArea)
         self._dock("Properties", self.properties, Qt.DockWidgetArea.RightDockWidgetArea)
+        self.status = QLabel()  # messages: what happened, what was refused and why
+        self.coords = QLabel()  # cursor position, snap and tool hint
+        self.statusBar().addWidget(self.status, 1)
+        self.statusBar().addPermanentWidget(self.coords)
         self._actions()
         self._toolbar()
-        self.status = QLabel()
-        self.statusBar().addWidget(self.status, 1)
         self.document.changed.connect(self._update_state)
         self.document.error.connect(self.show_error)
         self.resize(1280, 800)
@@ -76,6 +79,25 @@ class MainWindow(QMainWindow):
         self.undo_action = self._action("&Undo", self.undo, std.Undo)
         self.redo_action = self._action("&Redo", self.redo, std.Redo)
         self.fit_action = self._action("&Fit plan", self.plan.fit, "F")
+        self.delete_action = self._action("&Delete", self.delete_selected, std.Delete)
+        self.add_level_action = self._action("Add &level", self.add_level)
+        self.ortho_action = self._action("&Ortho", self._toggle_ortho, "F8")
+        self.ortho_action.setCheckable(True)
+        self.tool_actions: dict[str, QAction] = {}
+        group = QActionGroup(self)
+        for name, text, key in (
+            ("select", "&Select", "S"),
+            ("wall", "&Wall", "W"),
+            ("door", "&Door", "D"),
+            ("window", "Wi&ndow", "N"),
+        ):
+            action = self._action(text, lambda _=False, n=name: self.plan.set_tool(n), key)
+            action.setCheckable(True)
+            group.addAction(action)
+            self.tool_actions[name] = action
+        self.tool_actions["select"].setChecked(True)
+        self.plan.tool_changed.connect(lambda n: self.tool_actions[n].setChecked(True))
+        self.plan.status_changed.connect(self.coords.setText)
 
         file_menu = self.menuBar().addMenu("&File")
         for a in (self.new_action, self.open_action, self.save_action, self.save_as_action):
@@ -85,6 +107,14 @@ class MainWindow(QMainWindow):
         edit_menu = self.menuBar().addMenu("&Edit")
         edit_menu.addAction(self.undo_action)
         edit_menu.addAction(self.redo_action)
+        edit_menu.addSeparator()
+        edit_menu.addAction(self.add_level_action)
+        edit_menu.addAction(self.delete_action)
+        draw_menu = self.menuBar().addMenu("&Draw")
+        for action in self.tool_actions.values():
+            draw_menu.addAction(action)
+        draw_menu.addSeparator()
+        draw_menu.addAction(self.ortho_action)
         view_menu = self.menuBar().addMenu("&View")
         view_menu.addAction(self.fit_action)
 
@@ -101,6 +131,15 @@ class MainWindow(QMainWindow):
         self.level_combo.currentIndexChanged.connect(self._level_chosen)
         bar.addWidget(self.level_combo)
         bar.addAction(self.fit_action)
+        bar.addSeparator()
+        for action in self.tool_actions.values():
+            bar.addAction(action)
+        bar.addAction(self.ortho_action)
+        bar.addWidget(QLabel(" Thickness: "))
+        self.thickness_edit = QLineEdit("0.30")
+        self.thickness_edit.setMaximumWidth(60)
+        self.thickness_edit.editingFinished.connect(self._thickness_changed)
+        bar.addWidget(self.thickness_edit)
         self.addToolBar(bar)
 
     # ------------------------------------------------------------- state
@@ -130,6 +169,47 @@ class MainWindow(QMainWindow):
     def _level_chosen(self) -> None:
         value = self.level_combo.currentData()
         self.plan.set_level(UUID(value) if value else None)
+
+    def _toggle_ortho(self) -> None:
+        self.plan.ortho = self.ortho_action.isChecked()
+
+    def _thickness_changed(self) -> None:
+        try:
+            value = float(self.thickness_edit.text().strip().replace(",", "."))
+        except ValueError:
+            value = -1.0
+        if 0 < value <= 5:
+            self.plan.wall_thickness = value
+            self.thickness_edit.setText(f"{value:.2f}")
+        else:
+            self.show_error(f"not a wall thickness: {self.thickness_edit.text()!r}")
+            self.thickness_edit.setText(f"{self.plan.wall_thickness:.2f}")
+
+    def add_level(self) -> None:
+        """A new level 3 m above the highest one, named after its position."""
+        p = self.document.project
+        levels = p.levels_by_elevation()
+        elevation = levels[-1].elevation + 3.0 if levels else 0.0
+        names = {lv.name.casefold() for lv in levels}
+        number = len(levels)
+        while f"level {number}" in names:
+            number += 1
+        if self.document.edit(lambda: api.add_level(p, f"Level {number}", elevation)):
+            self.document.select(p.levels[-1].id)
+
+    def delete_selected(self) -> None:
+        selected = self.document.selected
+        if selected is None:
+            self.show_error("nothing selected")
+            return
+        kind = self.document.kind_of(selected)
+        p = self.document.project
+        if kind == "level":
+            self.document.edit(lambda: api.delete_level(p, selected))
+        elif kind == "wall":
+            self.document.edit(lambda: api.delete_wall(p, selected))
+        elif kind in ("door", "window"):
+            self.document.edit(lambda: api.delete_hosted(p, selected))
 
     def show_error(self, message: str) -> None:
         self.status.setText(message)
