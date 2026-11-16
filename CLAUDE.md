@@ -12,12 +12,17 @@ the ADRs in `docs/adr/` before changing anything they cover.
 ## Current state
 
 Phase 0 approved. Phase 2 (first interface, M8-M15) is planned and approved; M8 is done
-(ADRs 0008 own OpenGL view, 0009 PyInstaller), M9 (undo/redo) is done, M10 (main window) is
-next; see
+(ADRs 0008 own OpenGL view, 0009 PyInstaller), M9 (undo/redo) and M10 (main window) are done,
+M11 (editing in plan) is next; see
 `docs/ROADMAP.md`. Phase 1: M0, M1 (project, levels, `.bbim` file), M2 (walls bound to levels,
 file version 2), M3 (wall joins, `regen/` cache), M4 (doors and windows, file version 3)
 M5 (IFC4 export, file version 4), M6 (plan in SVG) and M7 (demonstration, `examples/`)
 done. Phase 1 still waits for M5's manual checks by the owner and a look at CI.
+
+Interface: never start `bbim-gui` or any window on the owner's screen. Tests run on Qt's
+offscreen platform (set in `tests/conftest.py`); to look at the window, capture it with
+`tools/capture_gui.py` (offscreen, Windows fonts, Arial) and read the PNG. Packaged
+programs run only through a runner like `spikes/m8/runexe.py`.
 
 Look at drawings, do not only test them: render with `tools/render_svg.py` (see its
 docstring) and read the PNG. Golden files are accepted only after such a look.

@@ -95,7 +95,11 @@ uv run ruff check       # lint
 uv run ruff format      # format
 uv run mypy             # type check
 uv run bbim --version   # the command-line tool
+uv run bbim-gui         # the desktop interface (work in progress, Phase 2)
 ```
+
+The interface needs the `gui` extra outside the development environment:
+`pip install brunelleschi[gui]`.
 
 To look at an SVG drawing as an image, see [tools/render_svg.py](tools/render_svg.py).
 

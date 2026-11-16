@@ -28,6 +28,7 @@ brunelleschi/
   drawings/   Views (plan first) -> 2D primitives -> SVG and DXF writers
   api/        Stable scripting facade over commands and queries
   cli/        `bbim` command-line tool, a thin client of api
+  gui/        `bbim-gui` desktop interface (PySide6, optional extra), a client of api only
 ```
 
 Dependency rule: arrows point downwards only.

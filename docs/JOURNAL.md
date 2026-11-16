@@ -3,6 +3,49 @@
 One entry per working session: what was decided, what was verified, what is open. Newest
 first.
 
+## 2026-11-16: M10 main window
+
+**Decided**
+
+- `brunelleschi.gui` (PySide6) is an optional extra, `brunelleschi[gui]`, so the core and
+  `bbim` install without Qt; PySide6 is also in the dev group so `uv run` keeps it.
+  pytest-qt (MIT) is a dev dependency. Entry point `bbim-gui [PROJECT.bbim]`; anything
+  else on the command line is refused before a window exists (ADR 0009 lesson).
+- `Document` holds the project, its file, the selection and the unsaved state; every
+  change is an API command through `Document.edit`, so it is undoable and a refusal
+  becomes a message (properties panel in red, status bar), never an exception or a
+  modal dialog. Unsaved state is derived from the undo history: undoing back to the
+  saved state clears the mark. New API `current_step` for that (the interface uses only
+  `api`).
+- Plan view: QPainter over the same primitives as the SVG plan, cosmetic pens, wheel zoom
+  at the cursor, drag to pan, fit; the selected wall or opening is outlined in blue.
+- Properties panel: every parameter of levels, walls, doors and windows; decimal comma;
+  the wall top switches between "bound to a level" and "unconnected height"; fields that
+  do not apply are disabled. The form is replaced (deleted later by Qt) on selection
+  change, never torn down inside one of its own signals.
+- CI installs the system libraries PySide6 needs on Linux.
+
+**Verified**
+
+- 477 tests pass on Python 3.13 and 3.11; ruff and mypy strict clean. 20 interface tests
+  with pytest-qt on the offscreen platform cover the M10 criterion (open the M7 house,
+  edit an elevation with a decimal comma, plan regenerated, title marked, undo and redo
+  from the Edit menu with labels), refusals, the wall top switch, door parameters,
+  selection shared between browser, panel and plan, save, new, bad files and start-up
+  arguments.
+- Looked at captures of the real window on the house file (`tools/capture_gui.py`), and
+  at a scripted scenario: first floor raised to 3.50 through the panel, then a door
+  position that does not fit refused with the reason shown and the field reset.
+- Found on the way: the offscreen platform draws text as boxes without a font
+  directory, and with the Windows fonts it garbles letters of Segoe UI (a variable
+  font); captures set `QT_QPA_FONTDIR` and Arial. An earlier check that counted dark
+  pixels had been fooled by the boxes.
+
+**Not done, by design**
+
+- The interface was not started on the owner's screen. Its first real use is the owner's.
+- The plan is read-only (editing is M11); no 3D yet (M12).
+
 ## 2026-11-16: M9 undo and redo in the core
 
 **Decided**

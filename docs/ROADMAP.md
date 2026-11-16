@@ -118,9 +118,9 @@ and ortho, doors and windows by clicking a wall, select, move, delete.
       bytes, redo all gives the final ones.
 
 ### M10 Main window
-- [ ] Open and save `.bbim`; levels and elements browser; properties panel that edits
+- [x] Open and save `.bbim`; levels and elements browser; properties panel that edits
       parameters through commands; read-only 2D plan of the current level.
-- [ ] Opens the M7 house; changing a level elevation in the panel updates the plan and
+- [x] Opens the M7 house; changing a level elevation in the panel updates the plan and
       can be undone. Checked with pytest-qt and window captures.
 
 ### M11 Editing in plan
