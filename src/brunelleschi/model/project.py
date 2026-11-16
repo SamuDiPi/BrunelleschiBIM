@@ -28,7 +28,7 @@ def short_id(element_id: UUID) -> str:
     return str(element_id)[:8]
 
 
-@dataclass(slots=True)
+@dataclass(slots=True, weakref_slot=True)
 class Project:
     """All the elements of one building project.
 

@@ -18,6 +18,7 @@ classifiers = [
 # (see docs/ROADMAP.md), each pinned and recorded in an ADR.
 dependencies = [
     "pydantic>=2.10,<3",
+    "shapely>=2.1,<3",
 ]
 
 [project.scripts]
@@ -33,6 +34,7 @@ dev = [
     "pytest>=8",
     "ruff>=0.8",
     "types-jsonschema>=4.26.0.20261006",
+    "types-shapely>=2.1.0.20261030",
 ]
 
 [build-system]

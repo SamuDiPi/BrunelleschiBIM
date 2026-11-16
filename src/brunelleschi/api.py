@@ -32,6 +32,7 @@ from brunelleschi.errors import (
     ProjectFileError,
     UnsupportedSchemaVersionError,
 )
+from brunelleschi.geometry import Join, JoinIssue, JoinKind
 from brunelleschi.model import (
     Level,
     Point,
@@ -41,6 +42,7 @@ from brunelleschi.model import (
     Wall,
     short_id,
 )
+from brunelleschi.regen import WallFootprint, WallGeometry, wall_geometry
 from brunelleschi.storage import CURRENT_SCHEMA_VERSION, dumps, json_schema, load, loads, save
 
 
@@ -55,6 +57,9 @@ __all__ = [
     "CURRENT_SCHEMA_VERSION",
     "AmbiguousReferenceError",
     "BrunelleschiError",
+    "Join",
+    "JoinIssue",
+    "JoinKind",
     "Level",
     "ModelError",
     "NotFoundError",
@@ -65,6 +70,8 @@ __all__ = [
     "UnconnectedHeight",
     "UnsupportedSchemaVersionError",
     "Wall",
+    "WallFootprint",
+    "WallGeometry",
     "add_level",
     "add_wall",
     "delete_level",
@@ -80,4 +87,5 @@ __all__ = [
     "set_level_elevation",
     "short_id",
     "transaction",
+    "wall_geometry",
 ]
