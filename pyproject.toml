@@ -38,6 +38,9 @@ gui = [
 ]
 
 [dependency-groups]
+build = [
+    "pyinstaller>=6.20,<7",
+]
 dev = [
     "jsonschema>=4.26.0",
     "mypy>=1.13",
@@ -82,7 +85,7 @@ select = [
 
 [tool.mypy]
 strict = true
-files = ["src", "tests", "examples"]
+files = ["src", "tests", "examples", "packaging"]
 warn_unreachable = true
 
 # IfcOpenShell is only partly typed; calls to it are confined to brunelleschi.ifc (ADR 0002)
