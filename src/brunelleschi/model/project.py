@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 from typing import ClassVar, TypeVar
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from brunelleschi.errors import AmbiguousReferenceError, ModelError, NotFoundError
 from brunelleschi.model.hosted import Door, HostedElement, Window
@@ -41,6 +41,8 @@ class Project:
     STORES: ClassVar[tuple[str, ...]] = ("_levels", "_walls", "_hosted")
 
     name: str
+    # Stable identity of the project itself (IFC project, site and building derive from it).
+    id: UUID = field(default_factory=uuid4)
     _levels: dict[UUID, Level] = field(default_factory=dict)
     _walls: dict[UUID, Wall] = field(default_factory=dict)
     _hosted: dict[UUID, HostedElement] = field(default_factory=dict)

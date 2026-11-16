@@ -7,6 +7,8 @@ Each migration is a small pure function with its own test and sample file
 
 from __future__ import annotations
 
+import json
+import uuid
 from collections.abc import Callable
 from typing import Any
 
@@ -33,7 +35,24 @@ def _v2_to_v3(data: RawFile) -> RawFile:
     return data
 
 
-MIGRATIONS: dict[int, Migration] = {1: _v1_to_v2, 2: _v2_to_v3}
+# Namespace for ids that migrations derive from file content.
+_MIGRATION_NAMESPACE = uuid.UUID("5f0c8a52-3c1e-4c55-9d1b-b4f1a8e2d7c3")
+
+
+def _v3_to_v4(data: RawFile) -> RawFile:
+    """Version 4 gives the project a stable id.
+
+    The id is derived from the file's content, so opening the same version 3 file twice
+    gives the same id (and the same IFC identifiers) even before it is saved again.
+    """
+    if "id" in data:
+        raise ProjectFileError("invalid project file: version 3 files cannot contain an id")
+    canonical = json.dumps(data, sort_keys=True, ensure_ascii=False)
+    data["id"] = str(uuid.uuid5(_MIGRATION_NAMESPACE, canonical))
+    return data
+
+
+MIGRATIONS: dict[int, Migration] = {1: _v1_to_v2, 2: _v2_to_v3, 3: _v3_to_v4}
 
 
 def upgrade(data: RawFile, from_version: int, to_version: int) -> RawFile:

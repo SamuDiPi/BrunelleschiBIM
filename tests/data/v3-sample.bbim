@@ -1,0 +1,191 @@
+{
+  "doors": [
+    {
+      "height": 2.2,
+      "host": "61c4ea7f-fa8a-4bcc-9d04-ce9945d72343",
+      "id": "074fc369-8e97-452c-b2e8-3547e0bd6293",
+      "position": 2.0,
+      "sill_height": 0.0,
+      "swing": {
+        "hinge": "start",
+        "side": "right"
+      },
+      "width": 1.0
+    }
+  ],
+  "format": "brunelleschi-project",
+  "levels": [
+    {
+      "elevation": 0.0,
+      "id": "b69a8549-57df-4d79-b87e-f2ed9c5d7cc6",
+      "name": "Piano terra"
+    },
+    {
+      "elevation": 3.6,
+      "id": "f376ebb0-9165-42e6-a9e5-b0459dd85386",
+      "name": "Primo piano"
+    },
+    {
+      "elevation": -2.8,
+      "id": "f8ca681c-163e-4ffd-9872-894027ee0704",
+      "name": "Interrato"
+    },
+    {
+      "elevation": 6.4,
+      "id": "26d01085-4a89-434b-9801-02650d547f07",
+      "name": "Copertura"
+    },
+    {
+      "elevation": -3.5,
+      "id": "79cf60ed-103a-4e99-9aeb-0be9627a3853",
+      "name": "Fondazioni"
+    }
+  ],
+  "name": "Casa Rossi",
+  "schema_version": 3,
+  "walls": [
+    {
+      "base": {
+        "level": "b69a8549-57df-4d79-b87e-f2ed9c5d7cc6",
+        "offset": 0.0
+      },
+      "end": [
+        8.0,
+        0.0
+      ],
+      "id": "61c4ea7f-fa8a-4bcc-9d04-ce9945d72343",
+      "start": [
+        0.0,
+        0.0
+      ],
+      "thickness": 0.3,
+      "top": {
+        "kind": "level",
+        "level": "f376ebb0-9165-42e6-a9e5-b0459dd85386",
+        "offset": -0.3
+      }
+    },
+    {
+      "base": {
+        "level": "b69a8549-57df-4d79-b87e-f2ed9c5d7cc6",
+        "offset": 0.0
+      },
+      "end": [
+        8.0,
+        6.0
+      ],
+      "id": "fc32f4f4-3c56-44fe-ae9d-b7eb76aa3bf3",
+      "start": [
+        8.0,
+        0.0
+      ],
+      "thickness": 0.3,
+      "top": {
+        "kind": "level",
+        "level": "f376ebb0-9165-42e6-a9e5-b0459dd85386",
+        "offset": 0.0
+      }
+    },
+    {
+      "base": {
+        "level": "f376ebb0-9165-42e6-a9e5-b0459dd85386",
+        "offset": 0.0
+      },
+      "end": [
+        0.0,
+        6.0
+      ],
+      "id": "455eb0b8-3794-4c71-a5d8-12c5d6e01fc8",
+      "start": [
+        0.0,
+        0.0
+      ],
+      "thickness": 0.3,
+      "top": {
+        "kind": "level",
+        "level": "26d01085-4a89-434b-9801-02650d547f07",
+        "offset": 0.0
+      }
+    },
+    {
+      "base": {
+        "level": "b69a8549-57df-4d79-b87e-f2ed9c5d7cc6",
+        "offset": 0.0
+      },
+      "end": [
+        5.0,
+        2.0
+      ],
+      "id": "397b77e2-7ed1-4d8c-8b6c-1bf90e44da88",
+      "start": [
+        2.0,
+        2.0
+      ],
+      "thickness": 0.1,
+      "top": {
+        "height": 2.4,
+        "kind": "height"
+      }
+    },
+    {
+      "base": {
+        "level": "b69a8549-57df-4d79-b87e-f2ed9c5d7cc6",
+        "offset": 0.0
+      },
+      "end": [
+        0.0,
+        6.0
+      ],
+      "id": "d67dcab4-25e4-4fa0-a459-9609f768aea8",
+      "start": [
+        8.0,
+        6.0
+      ],
+      "thickness": 0.3,
+      "top": {
+        "kind": "level",
+        "level": "f376ebb0-9165-42e6-a9e5-b0459dd85386",
+        "offset": 0.0
+      }
+    },
+    {
+      "base": {
+        "level": "b69a8549-57df-4d79-b87e-f2ed9c5d7cc6",
+        "offset": 0.0
+      },
+      "end": [
+        0.0,
+        0.0
+      ],
+      "id": "ffc4170d-9857-49b3-b00f-148e4dba4d18",
+      "start": [
+        0.0,
+        6.0
+      ],
+      "thickness": 0.3,
+      "top": {
+        "kind": "level",
+        "level": "f376ebb0-9165-42e6-a9e5-b0459dd85386",
+        "offset": 0.0
+      }
+    }
+  ],
+  "windows": [
+    {
+      "height": 1.4,
+      "host": "61c4ea7f-fa8a-4bcc-9d04-ce9945d72343",
+      "id": "27305d40-cfe0-413c-866f-570a1058fc5e",
+      "position": 6.0,
+      "sill_height": 0.9,
+      "width": 1.4
+    },
+    {
+      "height": 1.2,
+      "host": "d67dcab4-25e4-4fa0-a459-9609f768aea8",
+      "id": "03d1aa19-14b9-4725-adbe-40aec41badf1",
+      "position": 4.0,
+      "sill_height": 1.0,
+      "width": 1.2
+    }
+  ]
+}

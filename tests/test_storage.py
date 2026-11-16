@@ -306,3 +306,32 @@ def test_invalid_openings_are_refused(with_openings: api.Project, corrupt: Any) 
     corrupt(raw)
     with pytest.raises(ProjectFileError, match="invalid project file"):
         api.loads(json.dumps(raw))
+
+
+# ---------------------------------------------------------------- project id
+
+V3_SAMPLE = Path(__file__).parent / "data" / "v3-sample.bbim"
+
+
+def test_v3_sample_gets_a_stable_id() -> None:
+    """A file really written by the version 3 code (M4) opens; its derived project id is
+    the same every time it is opened, so IFC exports agree before it is saved again."""
+    first, second = api.load(V3_SAMPLE), api.load(V3_SAMPLE)
+    assert first.id == second.id
+    assert len(first.doors) == 1
+    assert len(first.windows) == 2
+    raw = json.loads(api.dumps(first))
+    assert raw["id"] == str(first.id)
+
+
+def test_v3_file_with_an_id_is_refused() -> None:
+    raw = json.loads(V3_SAMPLE.read_text(encoding="utf-8"))
+    raw["id"] = "6f1c0e8e-0000-4000-8000-000000000000"
+    with pytest.raises(ProjectFileError, match="version 3 files cannot contain an id"):
+        api.loads(json.dumps(raw))
+
+
+def test_project_id_round_trips(project: api.Project, tmp_path: Path) -> None:
+    api.save(project, tmp_path / "p.bbim")
+    assert api.load(tmp_path / "p.bbim").id == project.id
+    assert api.new_project("Other").id != project.id

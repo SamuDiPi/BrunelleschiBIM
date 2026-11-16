@@ -38,16 +38,20 @@ from brunelleschi.storage.schema_v2 import (
     WallV2,
 )
 from brunelleschi.storage.schema_v3 import DoorV3, ProjectFileV3, SwingV3, WindowV3
+from brunelleschi.storage.schema_v4 import ProjectFileV4
 
 FILE_FORMAT = FORMAT_NAME
-CURRENT_SCHEMA_VERSION = 3
-CurrentFile = ProjectFileV3
+CURRENT_SCHEMA_VERSION = 4
+CurrentFile = ProjectFileV4
 
 # Every released file version, for publishing its schema. Never remove an entry.
-_FILE_MODELS: dict[int, type[ProjectFileV1] | type[ProjectFileV2] | type[ProjectFileV3]] = {
+_FILE_MODELS: dict[
+    int, type[ProjectFileV1] | type[ProjectFileV2] | type[ProjectFileV3] | type[ProjectFileV4]
+] = {
     1: ProjectFileV1,
     2: ProjectFileV2,
     3: ProjectFileV3,
+    4: ProjectFileV4,
 }
 
 
@@ -108,9 +112,10 @@ def _window_to_file(window: Window) -> WindowV3:
 
 
 def to_file_model(project: Project) -> CurrentFile:
-    return ProjectFileV3(
+    return ProjectFileV4(
         format="brunelleschi-project",
-        schema_version=3,
+        schema_version=4,
+        id=project.id,
         name=project.name,
         levels=[LevelV1(id=lv.id, name=lv.name, elevation=lv.elevation) for lv in project.levels],
         walls=[_wall_to_file(w) for w in project.walls],
@@ -120,7 +125,7 @@ def to_file_model(project: Project) -> CurrentFile:
 
 
 def from_file_model(data: CurrentFile) -> Project:
-    project = Project(name=data.name)
+    project = Project(name=data.name, id=data.id)
     for lv in data.levels:
         project._add_level(Level(id=lv.id, name=lv.name, elevation=lv.elevation))
     for wall in data.walls:
