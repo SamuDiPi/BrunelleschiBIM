@@ -1,0 +1,358 @@
+{
+  "doors": [
+    {
+      "height": 2.1,
+      "host": "0abb7d4c-cf1f-4faa-8b37-0f9080fbf021",
+      "id": "7af138a8-0ba2-4570-9887-407e53a18fee",
+      "position": 1.5,
+      "sill_height": 0.0,
+      "swing": {
+        "hinge": "start",
+        "side": "left"
+      },
+      "width": 0.9
+    },
+    {
+      "height": 2.1,
+      "host": "e9fc32e0-9d1e-423a-9063-3052df7d7e11",
+      "id": "3ea816ee-eb4d-4662-8eb9-2657bd420978",
+      "position": 3.0,
+      "sill_height": 0.0,
+      "swing": {
+        "hinge": "start",
+        "side": "right"
+      },
+      "width": 0.8
+    }
+  ],
+  "format": "brunelleschi-project",
+  "id": "49597dc1-99a3-43be-b6f3-43266105d6b5",
+  "levels": [
+    {
+      "elevation": 0.0,
+      "id": "45f2da86-de04-4904-a1fc-4099c902f8e2",
+      "name": "Piano terra"
+    },
+    {
+      "elevation": 3.0,
+      "id": "44bd4372-1a60-4ae2-bc78-e6bd7db96a44",
+      "name": "Primo piano"
+    },
+    {
+      "elevation": 6.0,
+      "id": "4bc75b88-0167-4cc0-b815-869891e38b46",
+      "name": "Copertura"
+    }
+  ],
+  "name": "Casa M12",
+  "schema_version": 4,
+  "walls": [
+    {
+      "base": {
+        "level": "45f2da86-de04-4904-a1fc-4099c902f8e2",
+        "offset": 0.0
+      },
+      "end": [
+        4.0,
+        0.0
+      ],
+      "id": "0abb7d4c-cf1f-4faa-8b37-0f9080fbf021",
+      "start": [
+        0.0,
+        0.0
+      ],
+      "thickness": 0.3,
+      "top": {
+        "kind": "level",
+        "level": "44bd4372-1a60-4ae2-bc78-e6bd7db96a44",
+        "offset": 0.0
+      }
+    },
+    {
+      "base": {
+        "level": "45f2da86-de04-4904-a1fc-4099c902f8e2",
+        "offset": 0.0
+      },
+      "end": [
+        9.0,
+        0.0
+      ],
+      "id": "885f5cf5-2ccd-4040-ad43-196932d46316",
+      "start": [
+        4.0,
+        0.0
+      ],
+      "thickness": 0.3,
+      "top": {
+        "kind": "level",
+        "level": "44bd4372-1a60-4ae2-bc78-e6bd7db96a44",
+        "offset": 0.0
+      }
+    },
+    {
+      "base": {
+        "level": "45f2da86-de04-4904-a1fc-4099c902f8e2",
+        "offset": 0.0
+      },
+      "end": [
+        9.0,
+        6.0
+      ],
+      "id": "d8289db4-d144-4790-ba49-5875a034ae3f",
+      "start": [
+        9.0,
+        0.0
+      ],
+      "thickness": 0.3,
+      "top": {
+        "kind": "level",
+        "level": "44bd4372-1a60-4ae2-bc78-e6bd7db96a44",
+        "offset": 0.0
+      }
+    },
+    {
+      "base": {
+        "level": "45f2da86-de04-4904-a1fc-4099c902f8e2",
+        "offset": 0.0
+      },
+      "end": [
+        4.0,
+        6.0
+      ],
+      "id": "e934dafe-a10a-4d04-995f-6614c205f4b8",
+      "start": [
+        9.0,
+        6.0
+      ],
+      "thickness": 0.3,
+      "top": {
+        "kind": "level",
+        "level": "44bd4372-1a60-4ae2-bc78-e6bd7db96a44",
+        "offset": 0.0
+      }
+    },
+    {
+      "base": {
+        "level": "45f2da86-de04-4904-a1fc-4099c902f8e2",
+        "offset": 0.0
+      },
+      "end": [
+        0.0,
+        6.0
+      ],
+      "id": "33551422-7665-4380-9af6-730fe8b449d2",
+      "start": [
+        4.0,
+        6.0
+      ],
+      "thickness": 0.3,
+      "top": {
+        "kind": "level",
+        "level": "44bd4372-1a60-4ae2-bc78-e6bd7db96a44",
+        "offset": 0.0
+      }
+    },
+    {
+      "base": {
+        "level": "45f2da86-de04-4904-a1fc-4099c902f8e2",
+        "offset": 0.0
+      },
+      "end": [
+        0.0,
+        0.0
+      ],
+      "id": "fe9bf118-7968-4e4b-a8b1-f0a785cee496",
+      "start": [
+        0.0,
+        6.0
+      ],
+      "thickness": 0.3,
+      "top": {
+        "kind": "level",
+        "level": "44bd4372-1a60-4ae2-bc78-e6bd7db96a44",
+        "offset": 0.0
+      }
+    },
+    {
+      "base": {
+        "level": "45f2da86-de04-4904-a1fc-4099c902f8e2",
+        "offset": 0.0
+      },
+      "end": [
+        4.0,
+        6.0
+      ],
+      "id": "e9fc32e0-9d1e-423a-9063-3052df7d7e11",
+      "start": [
+        4.0,
+        0.0
+      ],
+      "thickness": 0.12,
+      "top": {
+        "kind": "level",
+        "level": "44bd4372-1a60-4ae2-bc78-e6bd7db96a44",
+        "offset": 0.0
+      }
+    },
+    {
+      "base": {
+        "level": "44bd4372-1a60-4ae2-bc78-e6bd7db96a44",
+        "offset": 0.0
+      },
+      "end": [
+        4.0,
+        0.0
+      ],
+      "id": "69eedddc-d8e8-4c88-9081-c054ce60cd51",
+      "start": [
+        0.0,
+        0.0
+      ],
+      "thickness": 0.3,
+      "top": {
+        "kind": "level",
+        "level": "4bc75b88-0167-4cc0-b815-869891e38b46",
+        "offset": 0.0
+      }
+    },
+    {
+      "base": {
+        "level": "44bd4372-1a60-4ae2-bc78-e6bd7db96a44",
+        "offset": 0.0
+      },
+      "end": [
+        9.0,
+        0.0
+      ],
+      "id": "bd5942b1-4a60-4125-8e8c-c5bfcdf3ea9e",
+      "start": [
+        4.0,
+        0.0
+      ],
+      "thickness": 0.3,
+      "top": {
+        "kind": "level",
+        "level": "4bc75b88-0167-4cc0-b815-869891e38b46",
+        "offset": 0.0
+      }
+    },
+    {
+      "base": {
+        "level": "44bd4372-1a60-4ae2-bc78-e6bd7db96a44",
+        "offset": 0.0
+      },
+      "end": [
+        9.0,
+        6.0
+      ],
+      "id": "a0be81db-3add-44e5-b79c-f6352dfdd8ee",
+      "start": [
+        9.0,
+        0.0
+      ],
+      "thickness": 0.3,
+      "top": {
+        "kind": "level",
+        "level": "4bc75b88-0167-4cc0-b815-869891e38b46",
+        "offset": 0.0
+      }
+    },
+    {
+      "base": {
+        "level": "44bd4372-1a60-4ae2-bc78-e6bd7db96a44",
+        "offset": 0.0
+      },
+      "end": [
+        4.0,
+        6.0
+      ],
+      "id": "356520e6-13da-4bd6-bb6e-9b1515e3b908",
+      "start": [
+        9.0,
+        6.0
+      ],
+      "thickness": 0.3,
+      "top": {
+        "kind": "level",
+        "level": "4bc75b88-0167-4cc0-b815-869891e38b46",
+        "offset": 0.0
+      }
+    },
+    {
+      "base": {
+        "level": "44bd4372-1a60-4ae2-bc78-e6bd7db96a44",
+        "offset": 0.0
+      },
+      "end": [
+        0.0,
+        6.0
+      ],
+      "id": "7d58bcf6-a6ac-4124-98db-35cbd7f36bcf",
+      "start": [
+        4.0,
+        6.0
+      ],
+      "thickness": 0.3,
+      "top": {
+        "kind": "level",
+        "level": "4bc75b88-0167-4cc0-b815-869891e38b46",
+        "offset": 0.0
+      }
+    },
+    {
+      "base": {
+        "level": "44bd4372-1a60-4ae2-bc78-e6bd7db96a44",
+        "offset": 0.0
+      },
+      "end": [
+        0.0,
+        0.0
+      ],
+      "id": "f954a07a-ee14-4579-9825-71895dcee460",
+      "start": [
+        0.0,
+        6.0
+      ],
+      "thickness": 0.3,
+      "top": {
+        "kind": "level",
+        "level": "4bc75b88-0167-4cc0-b815-869891e38b46",
+        "offset": 0.0
+      }
+    }
+  ],
+  "windows": [
+    {
+      "height": 1.4,
+      "host": "885f5cf5-2ccd-4040-ad43-196932d46316",
+      "id": "b80d53df-e8c7-424a-8961-4015dcc1c891",
+      "position": 2.5,
+      "sill_height": 0.9,
+      "width": 1.4
+    },
+    {
+      "height": 1.2,
+      "host": "d8289db4-d144-4790-ba49-5875a034ae3f",
+      "id": "5ffdde8b-8c02-4710-be9d-79b6ad561246",
+      "position": 3.0,
+      "sill_height": 1.0,
+      "width": 1.0
+    },
+    {
+      "height": 0.6,
+      "host": "33551422-7665-4380-9af6-730fe8b449d2",
+      "id": "a1985ea9-245e-4ae0-a9a5-0ba15926217b",
+      "position": 2.0,
+      "sill_height": 1.6,
+      "width": 0.8
+    },
+    {
+      "height": 1.4,
+      "host": "69eedddc-d8e8-4c88-9081-c054ce60cd51",
+      "id": "9463a3be-ecd4-44bb-be10-a8534f951ae8",
+      "position": 2.0,
+      "sill_height": 0.9,
+      "width": 1.2
+    }
+  ]
+}

@@ -335,3 +335,36 @@ def test_project_id_round_trips(project: api.Project, tmp_path: Path) -> None:
     api.save(project, tmp_path / "p.bbim")
     assert api.load(tmp_path / "p.bbim").id == project.id
     assert api.new_project("Other").id != project.id
+
+
+# --------------------------------------------------------------- IFC links
+
+V4_SAMPLE = Path(__file__).parent / "data" / "v4-sample.bbim"
+
+
+def test_v4_sample_is_upgraded() -> None:
+    """A file really written by the version 4 code (M12) opens, with no IFC links."""
+    project = api.load(V4_SAMPLE)
+    assert len(project.walls) == 13
+    assert project.references == []
+    assert json.loads(api.dumps(project))["references"] == []
+
+
+def test_v4_file_with_references_is_refused() -> None:
+    raw = json.loads(V4_SAMPLE.read_text(encoding="utf-8"))
+    raw["references"] = []
+    with pytest.raises(ProjectFileError, match="version 4 files cannot contain references"):
+        api.loads(json.dumps(raw))
+
+
+def test_references_round_trip(project: api.Project, tmp_path: Path) -> None:
+    api.add_reference(project, r"..\strutture\Telaio.ifc", "Strutture")
+    api.add_reference(project, "C:/progetti/impianti.ifc")
+    path = tmp_path / "p.bbim"
+    api.save(project, path)
+    loaded = api.load(path)
+    assert loaded == project
+    assert [(r.name, r.path) for r in loaded.references] == [
+        ("Strutture", "../strutture/Telaio.ifc"),
+        ("impianti", "C:/progetti/impianti.ifc"),
+    ]

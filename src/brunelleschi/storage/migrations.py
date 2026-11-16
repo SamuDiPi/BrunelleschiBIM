@@ -52,7 +52,15 @@ def _v3_to_v4(data: RawFile) -> RawFile:
     return data
 
 
-MIGRATIONS: dict[int, Migration] = {1: _v1_to_v2, 2: _v2_to_v3, 3: _v3_to_v4}
+def _v4_to_v5(data: RawFile) -> RawFile:
+    """Version 5 adds links to IFC files; a version 4 file has none."""
+    if "references" in data:
+        raise ProjectFileError("invalid project file: version 4 files cannot contain references")
+    data["references"] = []
+    return data
+
+
+MIGRATIONS: dict[int, Migration] = {1: _v1_to_v2, 2: _v2_to_v3, 3: _v3_to_v4, 4: _v4_to_v5}
 
 
 def upgrade(data: RawFile, from_version: int, to_version: int) -> RawFile:

@@ -10,6 +10,7 @@ from uuid import UUID, uuid4
 from brunelleschi.errors import AmbiguousReferenceError, ModelError, NotFoundError
 from brunelleschi.model.hosted import Door, HostedElement, Window
 from brunelleschi.model.level import Level
+from brunelleschi.model.reference import IfcReference
 from brunelleschi.model.units import LENGTH_TOLERANCE, MAX_ABS_COORDINATE, is_valid_length
 from brunelleschi.model.wall import TopAtLevel, Wall
 
@@ -38,7 +39,7 @@ class Project:
     """
 
     # The attributes that hold elements, by id. Transactions snapshot exactly these.
-    STORES: ClassVar[tuple[str, ...]] = ("_levels", "_walls", "_hosted")
+    STORES: ClassVar[tuple[str, ...]] = ("_levels", "_walls", "_hosted", "_references")
 
     name: str
     # Stable identity of the project itself (IFC project, site and building derive from it).
@@ -46,6 +47,7 @@ class Project:
     _levels: dict[UUID, Level] = field(default_factory=dict)
     _walls: dict[UUID, Wall] = field(default_factory=dict)
     _hosted: dict[UUID, HostedElement] = field(default_factory=dict)
+    _references: dict[UUID, IfcReference] = field(default_factory=dict)
 
     # ------------------------------------------------------------------ levels
 
@@ -125,6 +127,17 @@ class Project:
         """The doors and windows of a wall, in creation order."""
         return [e for e in self._hosted.values() if e.host_id == wall_id]
 
+    # -------------------------------------------------------- IFC references
+
+    @property
+    def references(self) -> list[IfcReference]:
+        """Linked IFC files, in the order they were linked."""
+        return list(self._references.values())
+
+    def reference(self, ref: UUID | str) -> IfcReference:
+        """A reference by id, or by a unique id prefix."""
+        return _by_id(self._references, ref, "IFC reference")
+
     # --------------------------------------------------------------- mutations
 
     def _add_level(self, level: Level) -> None:
@@ -160,6 +173,17 @@ class Project:
         except KeyError:
             raise NotFoundError(f"no door or window with id {element_id}") from None
 
+    def _add_reference(self, reference: IfcReference) -> None:
+        if reference.id in self._references:
+            raise ModelError(f"a reference with id {reference.id} already exists")
+        self._references[reference.id] = reference
+
+    def _remove_reference(self, reference_id: UUID) -> IfcReference:
+        try:
+            return self._references.pop(reference_id)
+        except KeyError:
+            raise NotFoundError(f"no IFC reference with id {reference_id}") from None
+
     # --------------------------------------------------------------- invariants
 
     def check(self) -> None:
@@ -170,6 +194,7 @@ class Project:
         self._check_levels(problems)
         bad_walls = self._check_walls(problems)
         self._check_hosted(problems, bad_walls)
+        self._check_references(problems)
         if problems:
             raise ModelError("; ".join(problems))
 
@@ -279,6 +304,16 @@ class Project:
                             f"{e.kind} {short_id(e.id)} and {f.kind} {short_id(f.id)} "
                             f"overlap in wall {short_id(wall_id)}"
                         )
+
+    def _check_references(self, problems: list[str]) -> None:
+        for r in self._references.values():
+            label = f"IFC reference {short_id(r.id)}"
+            if not r.name.strip():
+                problems.append(f"{label}: the name is empty")
+            if not r.path.strip():
+                problems.append(f"{label}: the path is empty")
+            if len(r.name) > MAX_NAME_LENGTH:
+                problems.append(f"{label}: name longer than {MAX_NAME_LENGTH} characters")
 
 
 def _overlap(a: tuple[float, float], b: tuple[float, float]) -> bool:

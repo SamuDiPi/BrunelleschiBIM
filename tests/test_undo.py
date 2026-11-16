@@ -243,6 +243,16 @@ def _op_delete_opening(p: api.Project, rng: random.Random) -> object:
     return api.delete_hosted(p, e.id)
 
 
+def _op_link(p: api.Project, rng: random.Random) -> object:
+    return api.add_reference(p, rng.choice(["a.ifc", "../b/c.ifc", "  "]))  # blank: invalid
+
+
+def _op_unlink(p: api.Project, rng: random.Random) -> object:
+    r = _pick(rng, list(p.references))
+    assert isinstance(r, api.IfcReference)
+    return api.remove_reference(p, r.id)
+
+
 def _op_batch(p: api.Project, rng: random.Random) -> object:
     with api.transaction(p, "Batch"):
         for _ in range(rng.randint(2, 4)):
@@ -262,6 +272,8 @@ OPERATIONS: list[Operation] = [
     *[_op_add_opening] * 4,
     *[_op_modify_opening] * 2,
     _op_delete_opening,
+    _op_link,
+    _op_unlink,
     _op_batch,
 ]
 

@@ -50,7 +50,7 @@ def test_saved_files_validate_against_the_current_schema() -> None:
     jsonschema.validate(json.loads(api.dumps(project)), _published(api.CURRENT_SCHEMA_VERSION))
 
 
-@pytest.mark.parametrize("version", [1, 2, 3])
+@pytest.mark.parametrize("version", [1, 2, 3, 4])
 def test_samples_validate_against_their_schema(version: int) -> None:
     path = Path(__file__).parent / "data" / f"v{version}-sample.bbim"
     jsonschema.validate(json.loads(path.read_text("utf-8")), _published(version))

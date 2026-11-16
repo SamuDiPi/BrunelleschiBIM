@@ -13,6 +13,7 @@ from brunelleschi.commands.levels import (
     rename_level,
     set_level_elevation,
 )
+from brunelleschi.commands.references import add_reference, remove_reference
 from brunelleschi.commands.transaction import transaction
 from brunelleschi.commands.undo import (
     can_redo,
@@ -35,6 +36,7 @@ from brunelleschi.commands.walls import (
 __all__ = [
     "add_door",
     "add_level",
+    "add_reference",
     "add_wall",
     "add_window",
     "can_redo",
@@ -50,6 +52,7 @@ __all__ = [
     "move_wall_end",
     "redo",
     "redo_label",
+    "remove_reference",
     "rename_level",
     "set_level_elevation",
     "transaction",

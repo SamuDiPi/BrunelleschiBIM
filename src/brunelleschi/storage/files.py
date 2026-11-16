@@ -18,6 +18,7 @@ from pydantic import ValidationError
 from brunelleschi.errors import ModelError, ProjectFileError, UnsupportedSchemaVersionError
 from brunelleschi.model import (
     Door,
+    IfcReference,
     Jamb,
     Level,
     Point,
@@ -39,19 +40,26 @@ from brunelleschi.storage.schema_v2 import (
 )
 from brunelleschi.storage.schema_v3 import DoorV3, ProjectFileV3, SwingV3, WindowV3
 from brunelleschi.storage.schema_v4 import ProjectFileV4
+from brunelleschi.storage.schema_v5 import ProjectFileV5, ReferenceV5
 
 FILE_FORMAT = FORMAT_NAME
-CURRENT_SCHEMA_VERSION = 4
-CurrentFile = ProjectFileV4
+CURRENT_SCHEMA_VERSION = 5
+CurrentFile = ProjectFileV5
 
 # Every released file version, for publishing its schema. Never remove an entry.
-_FILE_MODELS: dict[
-    int, type[ProjectFileV1] | type[ProjectFileV2] | type[ProjectFileV3] | type[ProjectFileV4]
-] = {
+_FileModel = (
+    type[ProjectFileV1]
+    | type[ProjectFileV2]
+    | type[ProjectFileV3]
+    | type[ProjectFileV4]
+    | type[ProjectFileV5]
+)
+_FILE_MODELS: dict[int, _FileModel] = {
     1: ProjectFileV1,
     2: ProjectFileV2,
     3: ProjectFileV3,
     4: ProjectFileV4,
+    5: ProjectFileV5,
 }
 
 
@@ -112,15 +120,16 @@ def _window_to_file(window: Window) -> WindowV3:
 
 
 def to_file_model(project: Project) -> CurrentFile:
-    return ProjectFileV4(
+    return ProjectFileV5(
         format="brunelleschi-project",
-        schema_version=4,
+        schema_version=5,
         id=project.id,
         name=project.name,
         levels=[LevelV1(id=lv.id, name=lv.name, elevation=lv.elevation) for lv in project.levels],
         walls=[_wall_to_file(w) for w in project.walls],
         doors=[_door_to_file(d) for d in project.doors],
         windows=[_window_to_file(w) for w in project.windows],
+        references=[ReferenceV5(id=r.id, name=r.name, path=r.path) for r in project.references],
     )
 
 
@@ -154,6 +163,8 @@ def from_file_model(data: CurrentFile) -> Project:
                 sill_height=w.sill_height,
             )
         )
+    for r in data.references:
+        project._add_reference(IfcReference(id=r.id, name=r.name, path=r.path))
     return project
 
 
