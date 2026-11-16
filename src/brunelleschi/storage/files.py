@@ -16,7 +16,18 @@ from typing import Any
 from pydantic import ValidationError
 
 from brunelleschi.errors import ModelError, ProjectFileError, UnsupportedSchemaVersionError
-from brunelleschi.model import Level, Point, Project, TopAtLevel, UnconnectedHeight, Wall
+from brunelleschi.model import (
+    Door,
+    Jamb,
+    Level,
+    Point,
+    Project,
+    Side,
+    TopAtLevel,
+    UnconnectedHeight,
+    Wall,
+    Window,
+)
 from brunelleschi.storage.migrations import upgrade
 from brunelleschi.storage.schema_v1 import FORMAT_NAME, LevelV1, ProjectFileV1
 from brunelleschi.storage.schema_v2 import (
@@ -26,15 +37,17 @@ from brunelleschi.storage.schema_v2 import (
     WallTopHeightV2,
     WallV2,
 )
+from brunelleschi.storage.schema_v3 import DoorV3, ProjectFileV3, SwingV3, WindowV3
 
 FILE_FORMAT = FORMAT_NAME
-CURRENT_SCHEMA_VERSION = 2
-CurrentFile = ProjectFileV2
+CURRENT_SCHEMA_VERSION = 3
+CurrentFile = ProjectFileV3
 
 # Every released file version, for publishing its schema. Never remove an entry.
-_FILE_MODELS: dict[int, type[ProjectFileV1] | type[ProjectFileV2]] = {
+_FILE_MODELS: dict[int, type[ProjectFileV1] | type[ProjectFileV2] | type[ProjectFileV3]] = {
     1: ProjectFileV1,
     2: ProjectFileV2,
+    3: ProjectFileV3,
 }
 
 
@@ -71,13 +84,38 @@ def _wall_from_file(data: WallV2) -> Wall:
     )
 
 
+def _door_to_file(door: Door) -> DoorV3:
+    return DoorV3(
+        id=door.id,
+        host=door.host_id,
+        position=door.position,
+        width=door.width,
+        height=door.height,
+        sill_height=door.sill_height,
+        swing=SwingV3(side=door.swing_side.value, hinge=door.hinge.value),
+    )
+
+
+def _window_to_file(window: Window) -> WindowV3:
+    return WindowV3(
+        id=window.id,
+        host=window.host_id,
+        position=window.position,
+        width=window.width,
+        height=window.height,
+        sill_height=window.sill_height,
+    )
+
+
 def to_file_model(project: Project) -> CurrentFile:
-    return ProjectFileV2(
+    return ProjectFileV3(
         format="brunelleschi-project",
-        schema_version=2,
+        schema_version=3,
         name=project.name,
         levels=[LevelV1(id=lv.id, name=lv.name, elevation=lv.elevation) for lv in project.levels],
         walls=[_wall_to_file(w) for w in project.walls],
+        doors=[_door_to_file(d) for d in project.doors],
+        windows=[_window_to_file(w) for w in project.windows],
     )
 
 
@@ -87,6 +125,30 @@ def from_file_model(data: CurrentFile) -> Project:
         project._add_level(Level(id=lv.id, name=lv.name, elevation=lv.elevation))
     for wall in data.walls:
         project._add_wall(_wall_from_file(wall))
+    for d in data.doors:
+        project._add_hosted(
+            Door(
+                id=d.id,
+                host_id=d.host,
+                position=d.position,
+                width=d.width,
+                height=d.height,
+                sill_height=d.sill_height,
+                swing_side=Side(d.swing.side),
+                hinge=Jamb(d.swing.hinge),
+            )
+        )
+    for w in data.windows:
+        project._add_hosted(
+            Window(
+                id=w.id,
+                host_id=w.host,
+                position=w.position,
+                width=w.width,
+                height=w.height,
+                sill_height=w.sill_height,
+            )
+        )
     return project
 
 

@@ -1,0 +1,419 @@
+{
+  "$defs": {
+    "DoorV3": {
+      "additionalProperties": false,
+      "description": "A door hosted in a wall.",
+      "properties": {
+        "height": {
+          "description": "Height of the opening in metres.",
+          "exclusiveMinimum": 0,
+          "maximum": 1000000.0,
+          "title": "Height",
+          "type": "number"
+        },
+        "host": {
+          "description": "Id of the host wall.",
+          "format": "uuid",
+          "title": "Host",
+          "type": "string"
+        },
+        "id": {
+          "description": "Stable identifier.",
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "position": {
+          "description": "Distance in metres from the wall's start to the centre, along the wall.",
+          "maximum": 1000000.0,
+          "minimum": 0,
+          "title": "Position",
+          "type": "number"
+        },
+        "sill_height": {
+          "description": "Height in metres of the bottom of the opening above the wall's base.",
+          "maximum": 1000000.0,
+          "minimum": 0,
+          "title": "Sill Height",
+          "type": "number"
+        },
+        "swing": {
+          "$ref": "#/$defs/SwingV3"
+        },
+        "width": {
+          "description": "Width of the opening in metres.",
+          "exclusiveMinimum": 0,
+          "maximum": 1000000.0,
+          "title": "Width",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "host",
+        "position",
+        "width",
+        "height",
+        "sill_height",
+        "swing"
+      ],
+      "title": "DoorV3",
+      "type": "object"
+    },
+    "LevelV1": {
+      "additionalProperties": false,
+      "description": "A named elevation.",
+      "properties": {
+        "elevation": {
+          "description": "Elevation in metres from the project zero.",
+          "maximum": 1000000.0,
+          "minimum": -1000000.0,
+          "title": "Elevation",
+          "type": "number"
+        },
+        "id": {
+          "description": "Stable identifier of the level.",
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "description": "Unique name, ignoring case.",
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "elevation"
+      ],
+      "title": "LevelV1",
+      "type": "object"
+    },
+    "SwingV3": {
+      "additionalProperties": false,
+      "description": "How a door opens.",
+      "properties": {
+        "hinge": {
+          "description": "Jamb carrying the hinges: the one nearer the wall's start or its end.",
+          "enum": [
+            "start",
+            "end"
+          ],
+          "title": "Hinge",
+          "type": "string"
+        },
+        "side": {
+          "description": "Side of the wall the leaf swings into, seen from the wall's start.",
+          "enum": [
+            "left",
+            "right"
+          ],
+          "title": "Side",
+          "type": "string"
+        }
+      },
+      "required": [
+        "side",
+        "hinge"
+      ],
+      "title": "SwingV3",
+      "type": "object"
+    },
+    "WallBaseV2": {
+      "additionalProperties": false,
+      "description": "Where the wall starts: a level plus an offset.",
+      "properties": {
+        "level": {
+          "description": "Id of the base level.",
+          "format": "uuid",
+          "title": "Level",
+          "type": "string"
+        },
+        "offset": {
+          "description": "Metres above (positive) or below the base level.",
+          "maximum": 1000000.0,
+          "minimum": -1000000.0,
+          "title": "Offset",
+          "type": "number"
+        }
+      },
+      "required": [
+        "level",
+        "offset"
+      ],
+      "title": "WallBaseV2",
+      "type": "object"
+    },
+    "WallTopAtLevelV2": {
+      "additionalProperties": false,
+      "description": "The wall top follows a level plus an offset.",
+      "properties": {
+        "kind": {
+          "const": "level",
+          "title": "Kind",
+          "type": "string"
+        },
+        "level": {
+          "description": "Id of the top level.",
+          "format": "uuid",
+          "title": "Level",
+          "type": "string"
+        },
+        "offset": {
+          "description": "Metres above (positive) or below the top level.",
+          "maximum": 1000000.0,
+          "minimum": -1000000.0,
+          "title": "Offset",
+          "type": "number"
+        }
+      },
+      "required": [
+        "kind",
+        "level",
+        "offset"
+      ],
+      "title": "WallTopAtLevelV2",
+      "type": "object"
+    },
+    "WallTopHeightV2": {
+      "additionalProperties": false,
+      "description": "The wall top is a fixed height above the wall base.",
+      "properties": {
+        "height": {
+          "description": "Height in metres above the wall base.",
+          "exclusiveMinimum": 0,
+          "maximum": 1000000.0,
+          "title": "Height",
+          "type": "number"
+        },
+        "kind": {
+          "const": "height",
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "height"
+      ],
+      "title": "WallTopHeightV2",
+      "type": "object"
+    },
+    "WallV2": {
+      "additionalProperties": false,
+      "description": "A straight wall. Absolute elevations are derived from its levels, not stored.",
+      "properties": {
+        "base": {
+          "$ref": "#/$defs/WallBaseV2"
+        },
+        "end": {
+          "description": "End of the centre line, [x, y] in metres.",
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "maximum": 1000000.0,
+              "minimum": -1000000.0,
+              "type": "number"
+            },
+            {
+              "maximum": 1000000.0,
+              "minimum": -1000000.0,
+              "type": "number"
+            }
+          ],
+          "title": "End",
+          "type": "array"
+        },
+        "id": {
+          "description": "Stable identifier of the wall.",
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "start": {
+          "description": "Start of the centre line, [x, y] in metres.",
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "maximum": 1000000.0,
+              "minimum": -1000000.0,
+              "type": "number"
+            },
+            {
+              "maximum": 1000000.0,
+              "minimum": -1000000.0,
+              "type": "number"
+            }
+          ],
+          "title": "Start",
+          "type": "array"
+        },
+        "thickness": {
+          "description": "Thickness in metres.",
+          "exclusiveMinimum": 0,
+          "maximum": 1000000.0,
+          "title": "Thickness",
+          "type": "number"
+        },
+        "top": {
+          "discriminator": {
+            "mapping": {
+              "height": "#/$defs/WallTopHeightV2",
+              "level": "#/$defs/WallTopAtLevelV2"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/WallTopAtLevelV2"
+            },
+            {
+              "$ref": "#/$defs/WallTopHeightV2"
+            }
+          ],
+          "title": "Top"
+        }
+      },
+      "required": [
+        "id",
+        "start",
+        "end",
+        "thickness",
+        "base",
+        "top"
+      ],
+      "title": "WallV2",
+      "type": "object"
+    },
+    "WindowV3": {
+      "additionalProperties": false,
+      "description": "A window hosted in a wall.",
+      "properties": {
+        "height": {
+          "description": "Height of the opening in metres.",
+          "exclusiveMinimum": 0,
+          "maximum": 1000000.0,
+          "title": "Height",
+          "type": "number"
+        },
+        "host": {
+          "description": "Id of the host wall.",
+          "format": "uuid",
+          "title": "Host",
+          "type": "string"
+        },
+        "id": {
+          "description": "Stable identifier.",
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "position": {
+          "description": "Distance in metres from the wall's start to the centre, along the wall.",
+          "maximum": 1000000.0,
+          "minimum": 0,
+          "title": "Position",
+          "type": "number"
+        },
+        "sill_height": {
+          "description": "Height in metres of the bottom of the opening above the wall's base.",
+          "maximum": 1000000.0,
+          "minimum": 0,
+          "title": "Sill Height",
+          "type": "number"
+        },
+        "width": {
+          "description": "Width of the opening in metres.",
+          "exclusiveMinimum": 0,
+          "maximum": 1000000.0,
+          "title": "Width",
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "host",
+        "position",
+        "width",
+        "height",
+        "sill_height"
+      ],
+      "title": "WindowV3",
+      "type": "object"
+    }
+  },
+  "$id": "https://github.com/SamuDiPi/BrunelleschiBIM/schemas/bbim-3.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "A BrunelleschiBIM project, schema version 3.",
+  "properties": {
+    "doors": {
+      "description": "Doors, in creation order.",
+      "items": {
+        "$ref": "#/$defs/DoorV3"
+      },
+      "title": "Doors",
+      "type": "array"
+    },
+    "format": {
+      "const": "brunelleschi-project",
+      "description": "Identifies the file as a BrunelleschiBIM project.",
+      "title": "Format",
+      "type": "string"
+    },
+    "levels": {
+      "description": "Levels, in creation order.",
+      "items": {
+        "$ref": "#/$defs/LevelV1"
+      },
+      "title": "Levels",
+      "type": "array"
+    },
+    "name": {
+      "description": "Project name.",
+      "maxLength": 200,
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 3,
+      "description": "Version of this file format.",
+      "title": "Schema Version",
+      "type": "integer"
+    },
+    "walls": {
+      "description": "Walls, in creation order.",
+      "items": {
+        "$ref": "#/$defs/WallV2"
+      },
+      "title": "Walls",
+      "type": "array"
+    },
+    "windows": {
+      "description": "Windows, in creation order.",
+      "items": {
+        "$ref": "#/$defs/WindowV3"
+      },
+      "title": "Windows",
+      "type": "array"
+    }
+  },
+  "required": [
+    "format",
+    "schema_version",
+    "name",
+    "levels",
+    "walls",
+    "doors",
+    "windows"
+  ],
+  "title": "BrunelleschiBIM project file, schema version 3",
+  "type": "object"
+}

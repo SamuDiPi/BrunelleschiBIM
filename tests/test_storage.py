@@ -56,7 +56,7 @@ def test_file_is_utf8_with_lf_and_sorted_keys(project: api.Project, tmp_path: Pa
 def test_file_header(project: api.Project) -> None:
     raw = _raw(project)
     assert raw["format"] == "brunelleschi-project"
-    assert raw["schema_version"] == 2
+    assert raw["schema_version"] == api.CURRENT_SCHEMA_VERSION
 
 
 def test_negative_zero_is_written_as_zero() -> None:
@@ -74,8 +74,10 @@ def test_save_does_not_leave_temporary_files(project: api.Project, tmp_path: Pat
 
 def test_newer_schema_version_is_refused(project: api.Project) -> None:
     raw = _raw(project)
-    raw["schema_version"] = 3
-    with pytest.raises(UnsupportedSchemaVersionError, match="reads up to version 2"):
+    raw["schema_version"] = api.CURRENT_SCHEMA_VERSION + 1
+    with pytest.raises(
+        UnsupportedSchemaVersionError, match=f"reads up to version {api.CURRENT_SCHEMA_VERSION}"
+    ):
         api.loads(json.dumps(raw))
 
 
@@ -153,7 +155,8 @@ def test_migrations_run_step_by_step(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_missing_migration_is_reported() -> None:
     with pytest.raises(UnsupportedSchemaVersionError, match="cannot be upgraded"):
-        migrations.upgrade({"schema_version": 2}, 2, 3)
+        last = api.CURRENT_SCHEMA_VERSION
+        migrations.upgrade({"schema_version": last}, last, last + 1)
 
 
 # ------------------------------------------------------------------ version 1 -> 2
@@ -167,7 +170,7 @@ def test_v1_sample_is_upgraded() -> None:
     assert project.name == "Casa Rossi"
     assert [lv.name for lv in project.levels_by_elevation()][:2] == ["Fondazioni", "Interrato"]
     assert project.walls == []
-    assert json.loads(api.dumps(project))["schema_version"] == 2
+    assert json.loads(api.dumps(project))["schema_version"] == api.CURRENT_SCHEMA_VERSION
 
 
 def test_v1_file_with_walls_is_refused() -> None:
@@ -230,6 +233,76 @@ def test_wall_file_layout(with_walls: api.Project) -> None:
 )
 def test_invalid_walls_are_refused(with_walls: api.Project, corrupt: Any) -> None:
     raw = _raw(with_walls)
+    corrupt(raw)
+    with pytest.raises(ProjectFileError, match="invalid project file"):
+        api.loads(json.dumps(raw))
+
+
+# ---------------------------------------------------------- doors and windows
+
+V2_SAMPLE = Path(__file__).parent / "data" / "v2-sample.bbim"
+
+
+def test_v2_sample_is_upgraded() -> None:
+    """A file really written by the version 2 code (M2/M3) opens, with no doors."""
+    project = api.load(V2_SAMPLE)
+    assert len(project.walls) == 7
+    assert project.hosted == []
+    raw = json.loads(api.dumps(project))
+    assert (raw["doors"], raw["windows"]) == ([], [])
+
+
+def test_v2_file_with_doors_is_refused() -> None:
+    raw = json.loads(V2_SAMPLE.read_text(encoding="utf-8"))
+    raw["doors"] = []
+    with pytest.raises(ProjectFileError, match="version 2 files cannot contain doors"):
+        api.loads(json.dumps(raw))
+
+
+@pytest.fixture
+def with_openings(with_walls: api.Project) -> api.Project:
+    first, second = with_walls.walls
+    api.add_door(with_walls, first.id, 1.2, 0.9, 2.1, swing_side="right", hinge="end")
+    api.add_window(with_walls, first.id, 4.0, 1.4, 1.2, 0.95)
+    api.add_window(with_walls, second.id, 2.0, 1.0, 1.0, 1.0)
+    return with_walls
+
+
+def test_doors_and_windows_round_trip(with_openings: api.Project, tmp_path: Path) -> None:
+    path = tmp_path / "house.bbim"
+    api.save(with_openings, path)
+    loaded = api.load(path)
+    assert loaded == with_openings
+    (door,) = loaded.doors
+    assert (door.swing_side, door.hinge) == (api.Side.RIGHT, api.Jamb.END)
+    api.save(loaded, tmp_path / "again.bbim")
+    assert (tmp_path / "again.bbim").read_bytes() == path.read_bytes()
+
+
+def test_door_file_layout(with_openings: api.Project) -> None:
+    raw = _raw(with_openings)
+    (door,) = raw["doors"]
+    assert door["host"] == str(with_openings.walls[0].id)
+    assert door["swing"] == {"side": "right", "hinge": "end"}
+    assert door["sill_height"] == 0.0
+    assert [w["position"] for w in raw["windows"]] == [4.0, 2.0]
+    assert "kind" not in door
+
+
+@pytest.mark.parametrize(
+    "corrupt",
+    [
+        lambda r: r["doors"][0].update(host="6f1c0e8e-0000-4000-8000-000000000000"),
+        lambda r: r["doors"][0].update(width=0),
+        lambda r: r["doors"][0]["swing"].update(side="up"),
+        lambda r: r["windows"][0].update(position=99),  # does not fit
+        lambda r: r["windows"][0].update(position=1.2),  # overlaps the door
+        lambda r: r["windows"][0].update(sill_height=-1),
+        lambda r: r["windows"][0].update(swing={"side": "left", "hinge": "start"}),
+    ],
+)
+def test_invalid_openings_are_refused(with_openings: api.Project, corrupt: Any) -> None:
+    raw = _raw(with_openings)
     corrupt(raw)
     with pytest.raises(ProjectFileError, match="invalid project file"):
         api.loads(json.dumps(raw))

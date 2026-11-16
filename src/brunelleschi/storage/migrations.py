@@ -24,7 +24,16 @@ def _v1_to_v2(data: RawFile) -> RawFile:
     return data
 
 
-MIGRATIONS: dict[int, Migration] = {1: _v1_to_v2}
+def _v2_to_v3(data: RawFile) -> RawFile:
+    """Version 3 adds doors and windows; a version 2 file has none."""
+    for key in ("doors", "windows"):
+        if key in data:
+            raise ProjectFileError(f"invalid project file: version 2 files cannot contain {key}")
+        data[key] = []
+    return data
+
+
+MIGRATIONS: dict[int, Migration] = {1: _v1_to_v2, 2: _v2_to_v3}
 
 
 def upgrade(data: RawFile, from_version: int, to_version: int) -> RawFile:

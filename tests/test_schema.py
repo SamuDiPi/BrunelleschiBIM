@@ -44,13 +44,16 @@ def test_saved_files_validate_against_the_current_schema() -> None:
     ground = api.add_level(project, "Ground floor", 0.0)
     first = api.add_level(project, "First floor", 3.0)
     api.add_wall(project, (0, 0), (5, 0), 0.3, ground.id, top_level=first.id)
-    api.add_wall(project, (5, 0), (5, 4), 0.3, ground.id, height=2.5)
+    w = api.add_wall(project, (5, 0), (5, 4), 0.3, ground.id, height=2.5)
+    api.add_door(project, w.id, 1.0, 0.9, 2.1)
+    api.add_window(project, w.id, 3.0, 1.0, 1.0, 1.0)
     jsonschema.validate(json.loads(api.dumps(project)), _published(api.CURRENT_SCHEMA_VERSION))
 
 
-def test_v1_sample_validates_against_v1_schema() -> None:
-    sample = json.loads((Path(__file__).parent / "data" / "v1-sample.bbim").read_text("utf-8"))
-    jsonschema.validate(sample, _published(1))
+@pytest.mark.parametrize("version", [1, 2])
+def test_samples_validate_against_their_schema(version: int) -> None:
+    path = Path(__file__).parent / "data" / f"v{version}-sample.bbim"
+    jsonschema.validate(json.loads(path.read_text("utf-8")), _published(version))
 
 
 def _file(**changes: object) -> dict[str, object]:
@@ -93,3 +96,24 @@ def test_schema_rejects_bad_files(bad: dict[str, object]) -> None:
     jsonschema.validate(_file(walls=[_WALL]), _published(2))  # the base case is valid
     with pytest.raises(jsonschema.ValidationError):
         jsonschema.validate(bad, _published(2))
+
+
+def test_v3_schema_rejects_a_bad_door() -> None:
+    door = {
+        "id": "6f1c0e8e-0000-4000-8000-000000000003",
+        "host": _WALL["id"],
+        "position": 1,
+        "width": 0.9,
+        "height": 2.1,
+        "sill_height": 0,
+        "swing": {"side": "left", "hinge": "start"},
+    }
+    good = {**_file(walls=[_WALL]), "schema_version": 3, "doors": [door], "windows": []}
+    jsonschema.validate(good, _published(3))
+    for bad_door in (
+        {**door, "swing": {"side": "up", "hinge": "start"}},
+        {**door, "width": 0},
+        {k: v for k, v in door.items() if k != "swing"},
+    ):
+        with pytest.raises(jsonschema.ValidationError):
+            jsonschema.validate({**good, "doors": [bad_door]}, _published(3))
