@@ -24,7 +24,13 @@ from brunelleschi.commands.undo import (
     undo,
     undo_label,
 )
-from brunelleschi.commands.walls import add_wall, delete_wall, modify_wall
+from brunelleschi.commands.walls import (
+    add_wall,
+    delete_wall,
+    modify_wall,
+    move_wall,
+    move_wall_end,
+)
 
 __all__ = [
     "add_door",
@@ -40,6 +46,8 @@ __all__ = [
     "delete_wall",
     "modify_hosted",
     "modify_wall",
+    "move_wall",
+    "move_wall_end",
     "redo",
     "redo_label",
     "rename_level",

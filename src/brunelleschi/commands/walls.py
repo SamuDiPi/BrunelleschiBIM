@@ -116,3 +116,82 @@ def delete_wall(project: Project, ref: UUID | str) -> Wall:
         for element in project.hosted_in(wall.id):
             project._remove_hosted(element.id)
         return project._remove_wall(wall.id)
+
+
+def _same_point(a: Point, b: Point) -> bool:
+    # The same rule as wall joins: equal on the micrometre grid.
+    return round(a.x * 1e6) == round(b.x * 1e6) and round(a.y * 1e6) == round(b.y * 1e6)
+
+
+def _set_end(project: Project, wall_id: UUID, end: str, point: Point) -> None:
+    if end == "start":
+        modify_wall(project, wall_id, start=point)
+    else:
+        modify_wall(project, wall_id, end=point)
+
+
+def _ends_at(project: Project, point: Point, exclude: UUID) -> list[tuple[Wall, str]]:
+    found = []
+    for wall in project.walls:
+        if wall.id == exclude:
+            continue
+        if _same_point(wall.start, point):
+            found.append((wall, "start"))
+        if _same_point(wall.end, point):
+            found.append((wall, "end"))
+    return found
+
+
+def move_wall_end(
+    project: Project,
+    ref: UUID | str,
+    end: str,
+    to: PointLike,
+    *,
+    drag_joined: bool = True,
+) -> Wall:
+    """Move the ``"start"`` or ``"end"`` of a wall to a new point.
+
+    With ``drag_joined`` (the default), the ends of other walls that met it there move too,
+    so corners stay joined, as when dragging a corner in a CAD program.
+    """
+    if end not in ("start", "end"):
+        raise ModelError(f"a wall end is 'start' or 'end', not {end!r}")
+    target = _point(to)
+    with transaction(project, "Move wall end"):
+        wall = project.wall(ref)
+        old = wall.start if end == "start" else wall.end
+        followers = _ends_at(project, old, wall.id) if drag_joined else []
+        _set_end(project, wall.id, end, target)
+        for other, other_end in followers:
+            _set_end(project, other.id, other_end, target)
+    return wall
+
+
+def move_wall(
+    project: Project,
+    ref: UUID | str,
+    dx: float,
+    dy: float,
+    *,
+    drag_joined: bool = True,
+) -> Wall:
+    """Move a wall by (dx, dy) metres, its doors and windows with it.
+
+    With ``drag_joined`` (the default), walls joined to its ends stretch to follow.
+    """
+    with transaction(project, "Move wall"):
+        wall = project.wall(ref)
+        moves = [("start", wall.start), ("end", wall.end)]
+        followers = (
+            [(w, e, p) for _, p in moves for w, e in _ends_at(project, p, wall.id)]
+            if drag_joined
+            else []
+        )
+        new_start = Point(wall.start.x + dx, wall.start.y + dy)
+        new_end = Point(wall.end.x + dx, wall.end.y + dy)
+        modify_wall(project, wall.id, start=new_start, end=new_end)
+        for other, other_end, old in followers:
+            target = new_start if _same_point(old, moves[0][1]) else new_end
+            _set_end(project, other.id, other_end, target)
+    return wall
