@@ -139,13 +139,16 @@ and ortho, doors and windows by clicking a wall, select, move, delete.
 ### M13 IFC files as references
 Added on 2026-11-16 at the owner's request: BrunelleschiBIM exported IFC but could not
 open one.
-- [ ] Open an IFC file (any authoring tool) as a reference: its elements appear in the
+- [x] Open an IFC file (any authoring tool) as a reference: its elements appear in the
       plan of the level they belong to and in the 3D view, read-only, as a background to
       draw on; storeys are matched to our levels by elevation or name.
-- [ ] Large or unusual files load without blocking the interface; elements that cannot be
+- [x] Large or unusual files load without blocking the interface; elements that cannot be
       shown are counted and reported, not hidden.
-- [ ] Whether the reference is remembered in the `.bbim` file (a link) is decided with the
-      owner before it is coded (file format).
+- [x] Whether the reference is remembered in the `.bbim` file (a link) is decided with the
+      owner before it is coded (file format): yes, file format version 5, path relative to
+      the project when possible.
+- [ ] Follow-ups: references in exported plans (SVG, DXF); elements below the cut (slabs)
+      drawn in projection; moving a reference whose coordinates are far from ours.
 
 ### M14 DXF export for CartesioCAD
 - [ ] Editable plan in DXF: separate layers, cut walls as HATCH, doors and windows as

@@ -3,6 +3,56 @@
 One entry per working session: what was decided, what was verified, what is open. Newest
 first.
 
+## 2026-11-16: M13 IFC files as references
+
+**Decided**
+
+- With the owner: a linked IFC is remembered in the project. File format version 5 adds
+  `references` (id, name, path); the path is stored relative to the project file's folder
+  when possible, with "/" separators, so the project and its references can be moved
+  together. Migration 4 -> 5 with a real version 4 sample. Linking and unlinking are
+  commands, so they undo.
+- `brunelleschi.ifc.reference` reads any IFC: storeys (elevation scaled from the file's
+  units to metres), and every physical element with a body triangulated by IfcOpenShell
+  on all cores. Elements without a body and elements IfcOpenShell cannot build are
+  counted by class and reported ("4 elements, 1 without geometry"), never dropped
+  silently. Elements are sorted by GlobalId so the result does not depend on thread
+  timing.
+- Storeys match our levels by elevation within 5 cm, else by name.
+- Interface: File > Link IFC...; a "References" group in the browser with the load status;
+  properties show the file, content and storey matches; Delete unlinks. Files load in a
+  worker thread. In the plan, reference elements of the storey matched to the level are
+  cut at the same 1.20 m as the plan and drawn as grey lines; in 3D they are light grey,
+  and a click on one shows its class and name in the status bar (not selectable).
+
+**Verified**
+
+- 544 tests pass on Python 3.13 and 3.11; ruff and mypy strict clean.
+- A "foreign" IFC built with IfcOpenShell's API in millimetres (two storeys, two walls,
+  one rotated, a slab, a column, furniture without a body) reads back in metres at the
+  right places; our own export reads back too; bad and missing files give clear errors.
+- In the window (pytest-qt): linking stores "../ext/strutture.ifc", loads in the
+  background, shows the summary, plan lines and 3D labels; undo, redo and Delete work;
+  after saving and copying both folders elsewhere, the link reloads; a missing file is
+  reported in the browser and refused when linking.
+- Looked at a capture of the window (grey walls and column of the reference in the
+  plan, storeys matched in the panel) and at a 3D render from above.
+
+**Found**
+
+- IfcOpenShell's geometry is in metres whatever the file's units, but storey elevations
+  are in the file's units: checked with a probe before coding, and tested. (The probe
+  first looked wrong because IfcOpenShell's authoring API takes metres and converts.)
+- The plan was fitted to the window before the window had its final size, so a project
+  opened at start-up appeared zoomed in. The plan now refits on resize until the user
+  zooms or pans; tested.
+
+**Open**
+
+- References are on screen only: not in exported SVG plans yet.
+- Elements of a reference below the cut (slabs) are not drawn in plan projection.
+- A reference with coordinates far from ours (georeferenced files) cannot be moved yet.
+
 ## 2026-11-16: M12 3D view
 
 **Decided**
