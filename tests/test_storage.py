@@ -56,7 +56,7 @@ def test_file_is_utf8_with_lf_and_sorted_keys(project: api.Project, tmp_path: Pa
 def test_file_header(project: api.Project) -> None:
     raw = _raw(project)
     assert raw["format"] == "brunelleschi-project"
-    assert raw["schema_version"] == 1
+    assert raw["schema_version"] == 2
 
 
 def test_negative_zero_is_written_as_zero() -> None:
@@ -74,8 +74,8 @@ def test_save_does_not_leave_temporary_files(project: api.Project, tmp_path: Pat
 
 def test_newer_schema_version_is_refused(project: api.Project) -> None:
     raw = _raw(project)
-    raw["schema_version"] = 2
-    with pytest.raises(UnsupportedSchemaVersionError, match="reads up to version 1"):
+    raw["schema_version"] = 3
+    with pytest.raises(UnsupportedSchemaVersionError, match="reads up to version 2"):
         api.loads(json.dumps(raw))
 
 
@@ -153,4 +153,83 @@ def test_migrations_run_step_by_step(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_missing_migration_is_reported() -> None:
     with pytest.raises(UnsupportedSchemaVersionError, match="cannot be upgraded"):
-        migrations.upgrade({"schema_version": 1}, 1, 2)
+        migrations.upgrade({"schema_version": 2}, 2, 3)
+
+
+# ------------------------------------------------------------------ version 1 -> 2
+
+V1_SAMPLE = Path(__file__).parent / "data" / "v1-sample.bbim"
+
+
+def test_v1_sample_is_upgraded() -> None:
+    """A file really written by the version 1 code (M1) opens, with no walls."""
+    project = api.load(V1_SAMPLE)
+    assert project.name == "Casa Rossi"
+    assert [lv.name for lv in project.levels_by_elevation()][:2] == ["Fondazioni", "Interrato"]
+    assert project.walls == []
+    assert json.loads(api.dumps(project))["schema_version"] == 2
+
+
+def test_v1_file_with_walls_is_refused() -> None:
+    raw = json.loads(V1_SAMPLE.read_text(encoding="utf-8"))
+    raw["walls"] = [{"anything": 1}]
+    with pytest.raises(ProjectFileError, match="version 1 files cannot contain walls"):
+        api.loads(json.dumps(raw))
+
+
+# ------------------------------------------------------------------------ walls
+
+
+@pytest.fixture
+def with_walls(project: api.Project) -> api.Project:
+    ground, first = project.level("Piano terra"), project.level("Primo piano")
+    api.add_wall(project, (0, 0), (6.5, 0), 0.3, ground.id, top_level=first.id, top_offset=-0.2)
+    api.add_wall(project, (6.5, 0), (6.5, 4.25), 0.25, ground.id, base_offset=-0.0, height=2.7)
+    return project
+
+
+def test_walls_round_trip(with_walls: api.Project, tmp_path: Path) -> None:
+    path = tmp_path / "house.bbim"
+    api.save(with_walls, path)
+    loaded = api.load(path)
+    assert loaded == with_walls
+    api.save(loaded, tmp_path / "again.bbim")
+    assert (tmp_path / "again.bbim").read_bytes() == path.read_bytes()
+
+
+def test_wall_file_layout(with_walls: api.Project) -> None:
+    walls = _raw(with_walls)["walls"]
+    first, second = walls
+    assert first["start"] == [0.0, 0.0]
+    assert first["end"] == [6.5, 0.0]
+    assert first["top"] == {
+        "kind": "level",
+        "level": str(with_walls.level("Primo piano").id),
+        "offset": -0.2,
+    }
+    assert second["top"] == {"kind": "height", "height": 2.7}
+    assert second["base"]["offset"] == 0.0
+    assert "-0.0" not in api.dumps(with_walls)
+    # Derived values are never stored.
+    for key in ("length", "base_z", "top_z", "height_z"):
+        assert key not in first
+
+
+@pytest.mark.parametrize(
+    "corrupt",
+    [
+        lambda r: r["walls"][0].update(thickness=0),
+        lambda r: r["walls"][0].update(start=[0, 0, 0]),
+        lambda r: r["walls"][0].update(end=r["walls"][0]["start"]),
+        lambda r: r["walls"][0]["top"].update(kind="roof"),
+        lambda r: r["walls"][1]["top"].update(height=-1),
+        lambda r: r["walls"][0]["base"].update(level="6f1c0e8e-0000-4000-8000-000000000000"),
+        lambda r: r["walls"][1].update(id=r["walls"][0]["id"]),
+        lambda r: r["walls"][0]["top"].update(offset=-10),  # top below base
+    ],
+)
+def test_invalid_walls_are_refused(with_walls: api.Project, corrupt: Any) -> None:
+    raw = _raw(with_walls)
+    corrupt(raw)
+    with pytest.raises(ProjectFileError, match="invalid project file"):
+        api.loads(json.dumps(raw))

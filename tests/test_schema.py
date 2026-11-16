@@ -1,4 +1,4 @@
-"""The published JSON Schema of the .bbim file."""
+"""The published JSON Schemas of the .bbim file."""
 
 from __future__ import annotations
 
@@ -10,40 +10,86 @@ import pytest
 
 from brunelleschi import api
 
-SCHEMA_FILE = Path(__file__).parent.parent / "schemas" / "bbim-1.schema.json"
+SCHEMAS = Path(__file__).parent.parent / "schemas"
+VERSIONS = range(1, api.CURRENT_SCHEMA_VERSION + 1)
 
 
-def _published() -> dict[str, object]:
-    data: dict[str, object] = json.loads(SCHEMA_FILE.read_text(encoding="utf-8"))
+def _published(version: int) -> dict[str, object]:
+    path = SCHEMAS / f"bbim-{version}.schema.json"
+    data: dict[str, object] = json.loads(path.read_text(encoding="utf-8"))
     return data
 
 
-def test_published_schema_is_up_to_date() -> None:
-    assert _published() == api.json_schema(), (
-        "schemas/bbim-1.schema.json is out of date; regenerate it with `bbim schema`"
+@pytest.mark.parametrize("version", VERSIONS)
+def test_published_schema_is_up_to_date(version: int) -> None:
+    """Released schemas never change; the current one matches the code."""
+    assert _published(version) == api.json_schema(version), (
+        f"schemas/bbim-{version}.schema.json differs from the code. For the current version, "
+        f"regenerate it with `bbim schema -o`; a released version must never change."
     )
 
 
-def test_published_schema_is_a_valid_schema() -> None:
-    jsonschema.Draft202012Validator.check_schema(_published())
+@pytest.mark.parametrize("version", VERSIONS)
+def test_published_schema_is_a_valid_schema(version: int) -> None:
+    jsonschema.Draft202012Validator.check_schema(_published(version))
 
 
-def test_saved_files_validate_against_the_schema() -> None:
+def test_schema_files_are_lf_only() -> None:
+    for path in SCHEMAS.glob("*.json"):
+        assert b"\r\n" not in path.read_bytes(), path.name
+
+
+def test_saved_files_validate_against_the_current_schema() -> None:
     project = api.new_project("House")
-    api.add_level(project, "Ground floor", 0.0)
-    api.add_level(project, "First floor", 3.0)
-    jsonschema.validate(json.loads(api.dumps(project)), _published())
+    ground = api.add_level(project, "Ground floor", 0.0)
+    first = api.add_level(project, "First floor", 3.0)
+    api.add_wall(project, (0, 0), (5, 0), 0.3, ground.id, top_level=first.id)
+    api.add_wall(project, (5, 0), (5, 4), 0.3, ground.id, height=2.5)
+    jsonschema.validate(json.loads(api.dumps(project)), _published(api.CURRENT_SCHEMA_VERSION))
+
+
+def test_v1_sample_validates_against_v1_schema() -> None:
+    sample = json.loads((Path(__file__).parent / "data" / "v1-sample.bbim").read_text("utf-8"))
+    jsonschema.validate(sample, _published(1))
+
+
+def _file(**changes: object) -> dict[str, object]:
+    base: dict[str, object] = {
+        "format": "brunelleschi-project",
+        "schema_version": 2,
+        "name": "P",
+        "levels": [],
+        "walls": [],
+    }
+    base.update(changes)
+    return base
+
+
+_WALL = {
+    "id": "6f1c0e8e-0000-4000-8000-000000000001",
+    "start": [0, 0],
+    "end": [5, 0],
+    "thickness": 0.3,
+    "base": {"level": "6f1c0e8e-0000-4000-8000-000000000002", "offset": 0},
+    "top": {"kind": "height", "height": 3},
+}
 
 
 @pytest.mark.parametrize(
     "bad",
     [
-        {"format": "brunelleschi-project", "schema_version": 2, "name": "P", "levels": []},
-        {"format": "brunelleschi-project", "schema_version": 1, "name": "", "levels": []},
-        {"format": "brunelleschi-project", "schema_version": 1, "name": "P", "levels": [{}]},
-        {"format": "x", "schema_version": 1, "name": "P", "levels": []},
+        _file(schema_version=3),
+        _file(name=""),
+        _file(levels=[{}]),
+        _file(format="x"),
+        _file(walls=[{**_WALL, "thickness": 0}]),
+        _file(walls=[{**_WALL, "start": [0, 0, 0]}]),
+        _file(walls=[{**_WALL, "top": {"kind": "height", "height": 3, "level": "x"}}]),
+        _file(walls=[{**_WALL, "top": {"kind": "level", "offset": 0}}]),
+        _file(walls=[{**_WALL, "length": 5}]),
     ],
 )
 def test_schema_rejects_bad_files(bad: dict[str, object]) -> None:
+    jsonschema.validate(_file(walls=[_WALL]), _published(2))  # the base case is valid
     with pytest.raises(jsonschema.ValidationError):
-        jsonschema.validate(bad, _published())
+        jsonschema.validate(bad, _published(2))

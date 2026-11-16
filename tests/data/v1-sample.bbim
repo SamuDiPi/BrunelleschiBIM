@@ -1,0 +1,32 @@
+{
+  "format": "brunelleschi-project",
+  "levels": [
+    {
+      "elevation": 0.0,
+      "id": "b69a8549-57df-4d79-b87e-f2ed9c5d7cc6",
+      "name": "Piano terra"
+    },
+    {
+      "elevation": 3.2,
+      "id": "f376ebb0-9165-42e6-a9e5-b0459dd85386",
+      "name": "Primo piano"
+    },
+    {
+      "elevation": -2.8,
+      "id": "f8ca681c-163e-4ffd-9872-894027ee0704",
+      "name": "Interrato"
+    },
+    {
+      "elevation": 6.4,
+      "id": "26d01085-4a89-434b-9801-02650d547f07",
+      "name": "Copertura"
+    },
+    {
+      "elevation": -3.5,
+      "id": "79cf60ed-103a-4e99-9aeb-0be9627a3853",
+      "name": "Fondazioni"
+    }
+  ],
+  "name": "Casa Rossi",
+  "schema_version": 1
+}
