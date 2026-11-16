@@ -20,14 +20,14 @@ def add_level(
 ) -> Level:
     """Create a level. Names must be unique (ignoring case); elevations are in metres."""
     level = Level(id=level_id or uuid4(), name=name.strip(), elevation=float(elevation))
-    with transaction(project):
+    with transaction(project, f"Add level {level.name!r}"):
         project._add_level(level)
     return level
 
 
 def rename_level(project: Project, ref: UUID | str, new_name: str) -> Level:
     """Give a level a new name."""
-    with transaction(project):
+    with transaction(project, "Rename level"):
         level = project.level(ref)
         level.name = new_name.strip()
     return project.level(level.id)
@@ -41,7 +41,7 @@ def set_level_elevation(project: Project, ref: UUID | str, elevation: float) -> 
     """
     if not math.isfinite(float(elevation)):
         raise ModelError("the elevation must be a finite number of metres")
-    with transaction(project):
+    with transaction(project, "Change level elevation"):
         level = project.level(ref)
         level.elevation = float(elevation)
     return project.level(level.id)
@@ -49,7 +49,7 @@ def set_level_elevation(project: Project, ref: UUID | str, elevation: float) -> 
 
 def delete_level(project: Project, ref: UUID | str) -> Level:
     """Delete a level. Refused while other elements are bound to it."""
-    with transaction(project):
+    with transaction(project, "Delete level"):
         level = project.level(ref)
         dependents = _dependents(project, level)
         if dependents:

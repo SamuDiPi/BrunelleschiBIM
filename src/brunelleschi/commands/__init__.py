@@ -14,6 +14,15 @@ from brunelleschi.commands.levels import (
     set_level_elevation,
 )
 from brunelleschi.commands.transaction import transaction
+from brunelleschi.commands.undo import (
+    can_redo,
+    can_undo,
+    clear_history,
+    redo,
+    redo_label,
+    undo,
+    undo_label,
+)
 from brunelleschi.commands.walls import add_wall, delete_wall, modify_wall
 
 __all__ = [
@@ -21,12 +30,19 @@ __all__ = [
     "add_level",
     "add_wall",
     "add_window",
+    "can_redo",
+    "can_undo",
+    "clear_history",
     "delete_hosted",
     "delete_level",
     "delete_wall",
     "modify_hosted",
     "modify_wall",
+    "redo",
+    "redo_label",
     "rename_level",
     "set_level_elevation",
     "transaction",
+    "undo",
+    "undo_label",
 ]

@@ -36,7 +36,7 @@ def add_door(
     door_id: UUID | None = None,
 ) -> Door:
     """Place a door in a wall, its centre ``position`` metres from the wall's start."""
-    with transaction(project):
+    with transaction(project, "Add door"):
         door = Door(
             id=door_id or uuid4(),
             host_id=project.wall(wall).id,
@@ -63,7 +63,7 @@ def add_window(
 ) -> Window:
     """Place a window in a wall, its centre ``position`` metres from the wall's start and
     its sill ``sill_height`` metres above the wall's base."""
-    with transaction(project):
+    with transaction(project, "Add window"):
         window = Window(
             id=window_id or uuid4(),
             host_id=project.wall(wall).id,
@@ -90,7 +90,7 @@ def modify_hosted(
 ) -> HostedElement:
     """Change some parameters of a door or window; ``None`` keeps a value. ``wall`` moves
     the element to another wall."""
-    with transaction(project):
+    with transaction(project, "Modify door or window"):
         element = project.hosted_element(ref)
         if wall is not None:
             element.host_id = project.wall(wall).id
@@ -114,5 +114,5 @@ def modify_hosted(
 
 def delete_hosted(project: Project, ref: UUID | str) -> HostedElement:
     """Delete a door or window."""
-    with transaction(project):
+    with transaction(project, "Delete door or window"):
         return project._remove_hosted(project.hosted_element(ref).id)

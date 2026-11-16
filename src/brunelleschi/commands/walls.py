@@ -39,7 +39,7 @@ def add_wall(
     """
     if top_level is not None and height is not None:
         raise ModelError("give either a top level or a height, not both")
-    with transaction(project):
+    with transaction(project, "Add wall"):
         top: WallTop
         if top_level is not None:
             top = TopAtLevel(project.level(top_level).id, float(top_offset))
@@ -82,7 +82,7 @@ def modify_wall(
     """
     if top_level is not None and height is not None:
         raise ModelError("give either a top level or a height, not both")
-    with transaction(project):
+    with transaction(project, "Modify wall"):
         wall = project.wall(ref)
         if start is not None:
             wall.start = _point(start)
@@ -111,7 +111,7 @@ def modify_wall(
 
 def delete_wall(project: Project, ref: UUID | str) -> Wall:
     """Delete a wall, together with its doors and windows."""
-    with transaction(project):
+    with transaction(project, "Delete wall"):
         wall = project.wall(ref)
         for element in project.hosted_in(wall.id):
             project._remove_hosted(element.id)
