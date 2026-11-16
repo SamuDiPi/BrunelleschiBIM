@@ -241,3 +241,35 @@ def test_unexpected_arguments_are_refused_without_a_window(
 ) -> None:
     assert main(argv) == 2
     assert "unexpected arguments" in capsys.readouterr().err
+
+
+# ----------------------------------------------------------------- export
+
+
+def test_export_ifc(window: MainWindow, tmp_path: Path) -> None:
+    from brunelleschi.ifc import validate_ifc
+
+    out = tmp_path / "casa.ifc"
+    assert window.export_ifc_to(out)
+    assert "Exported IFC4" in window.status.text()
+    assert validate_ifc(out).issues == ()
+
+
+def test_export_plan_picks_a_scale_that_fits(window: MainWindow, tmp_path: Path) -> None:
+    out = tmp_path / "plan.svg"
+    assert window.export_plan_to(out)
+    assert "at 1:50 on A3" in window.status.text()
+    assert out.read_text(encoding="utf-8") == api.plan_svg(
+        window.document.project, "Piano terra", api.Sheet("A3", scale=50)
+    )
+    p = window.document.project
+    window.document.edit(lambda: api.add_wall(p, (0, 0), (30, 0), 0.3, "Piano terra", height=3))
+    assert window.export_plan_to(out)
+    assert "at 1:100 on A3" in window.status.text()
+
+
+def test_export_to_a_bad_place(window: MainWindow, tmp_path: Path) -> None:
+    assert not window.export_ifc_to(tmp_path / "no-such-folder" / "x.ifc")
+    assert "Cannot export x.ifc" in window.status.text()
+    assert not (tmp_path / "no-such-folder").exists()  # no folder created behind our back
+    assert not window.export_plan_to(tmp_path / "no-such-folder" / "x.svg")

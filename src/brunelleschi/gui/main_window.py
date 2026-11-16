@@ -75,6 +75,8 @@ class MainWindow(QMainWindow):
         self.open_action = self._action("&Open...", self.open_dialog, std.Open)
         self.save_action = self._action("&Save", self.save, std.Save)
         self.save_as_action = self._action("Save &As...", self.save_as_dialog, std.SaveAs)
+        self.export_ifc_action = self._action("Export &IFC...", self.export_ifc_dialog)
+        self.export_plan_action = self._action("Export &plan as SVG...", self.export_plan_dialog)
         self.quit_action = self._action("&Quit", self.close, std.Quit)
         self.undo_action = self._action("&Undo", self.undo, std.Undo)
         self.redo_action = self._action("&Redo", self.redo, std.Redo)
@@ -102,6 +104,9 @@ class MainWindow(QMainWindow):
         file_menu = self.menuBar().addMenu("&File")
         for a in (self.new_action, self.open_action, self.save_action, self.save_as_action):
             file_menu.addAction(a)
+        file_menu.addSeparator()
+        file_menu.addAction(self.export_ifc_action)
+        file_menu.addAction(self.export_plan_action)
         file_menu.addSeparator()
         file_menu.addAction(self.quit_action)
         edit_menu = self.menuBar().addMenu("&Edit")
@@ -276,6 +281,58 @@ class MainWindow(QMainWindow):
     def save_as_dialog(self) -> bool:
         name, _ = QFileDialog.getSaveFileName(self, "Save project", "", FILE_FILTER)
         return self.save_to(Path(name)) if name else False
+
+    # ----------------------------------------------------------- export
+
+    def _default_name(self, suffix: str) -> str:
+        path = self.document.path
+        return str(path.with_suffix(suffix)) if path else f"{self.document.project.name}{suffix}"
+
+    def export_ifc_to(self, path: Path) -> bool:
+        from brunelleschi.ifc import write_ifc  # IfcOpenShell loads only when needed
+
+        try:
+            write_ifc(self.document.project, path)
+        except (api.BrunelleschiError, OSError) as exc:
+            self.show_error(f"Cannot export {path.name}: {exc}")
+            return False
+        self.status.setText(f"Exported IFC4 to {path}")
+        return True
+
+    def export_ifc_dialog(self) -> None:
+        name, _ = QFileDialog.getSaveFileName(
+            self, "Export IFC", self._default_name(".ifc"), "IFC4 (*.ifc)"
+        )
+        if name:
+            self.export_ifc_to(Path(name))
+
+    def export_plan_to(self, path: Path) -> bool:
+        """The plan of the level shown, on A3 at the first scale it fits: 1:50, 1:100, 1:200."""
+        level_id = self.plan.level_id
+        if level_id is None:
+            self.show_error("there is no level to draw")
+            return False
+        project = self.document.project
+        for scale in (50.0, 100.0, 200.0):
+            try:
+                api.write_plan_svg(project, level_id, path, api.Sheet("A3", scale=scale))
+            except api.DrawingError:
+                continue
+            except OSError as exc:
+                self.show_error(f"Cannot export {path.name}: {exc}")
+                return False
+            level = project.level(level_id).name
+            self.status.setText(f"Exported the plan of {level!r} at 1:{scale:g} on A3 to {path}")
+            return True
+        self.show_error("the plan does not fit on A3 even at 1:200; use bbim plan for larger paper")
+        return False
+
+    def export_plan_dialog(self) -> None:
+        name, _ = QFileDialog.getSaveFileName(
+            self, "Export plan", self._default_name(".svg"), "SVG drawing (*.svg)"
+        )
+        if name:
+            self.export_plan_to(Path(name))
 
     def closeEvent(self, event: QCloseEvent) -> None:
         if self.confirm_discard():
