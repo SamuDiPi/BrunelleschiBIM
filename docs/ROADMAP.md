@@ -84,10 +84,12 @@ get a valid IFC4 file and a plan in SVG.
 - [x] Scale and paper size options produce the stated dimensions in millimetres.
 
 ### M7 Phase 1 demonstration
-- [ ] One script and one CLI session create levels, four walls with corners, a door and a
-      window, raise a level, then export IFC4 and SVG.
-- [ ] The end-to-end test runs that scenario and checks the before/after elevations.
-- [ ] `README.md` shows the scenario.
+- [x] One script and one CLI session create levels, four walls with corners, a door and a
+      window, raise a level, then export IFC4 and SVG (`examples/`: Python, PowerShell,
+      POSIX shell).
+- [x] The end-to-end test runs that scenario and checks the before/after elevations, in
+      the model and in the IFC geometry.
+- [x] `README.md` shows the scenario (both snippets run as written).
 
 ## Later (not yet broken down)
 

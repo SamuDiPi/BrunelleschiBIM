@@ -3,6 +3,42 @@
 One entry per working session: what was decided, what was verified, what is open. Newest
 first.
 
+## 2026-11-16: M7 Phase 1 demonstration, and where Phase 1 stands
+
+**Done**
+
+- `examples/phase1_demo.py` (API), `phase1_demo.ps1` and `phase1_demo.sh` (CLI) build a
+  6 x 4 m room on two levels with four mitred corners, a door and a window; export IFC4
+  and a plan; raise the first floor from 3.00 to 3.20 m; export again.
+- `tests/test_demo.py` runs the script and this platform's CLI session as real
+  processes and checks: the model after the change; storey elevations and wall tops
+  before and after, measured on the IFC geometry evaluated by IfcOpenShell; both IFC
+  files valid with schema and rules and with identical GlobalIds; the ground floor plan
+  unchanged (its cut at 1.20 m is below the change).
+- `--quiet` on `wall/door/window add` prints only the new id, so a shell session can
+  pass a wall to a door without copying ids by hand.
+- README shows the scenario in Python and PowerShell; both snippets were run as written.
+- mypy now also checks `examples/`.
+
+**Found while doing it**
+
+- A PowerShell helper named `Bbim` called itself (function names are case-insensitive)
+  and overflowed the call stack. Renamed `Invoke-Bbim`, with a comment.
+- Unquoted `3,00` is an array in PowerShell, not a decimal comma. Quoted everywhere in
+  the PowerShell examples, with a comment; the README says so too.
+- The extra test that ran the POSIX script on Windows was dropped: `sh` is not on the
+  PATH of the test environment; on Linux CI the POSIX session is the one that runs.
+
+**Phase 1, overall**
+
+- Met, by automated tests and real runs: levels; walls bound to levels with corner and
+  T joins; a door and a window hosted in a wall with automatic openings; level changes
+  propagate; IFC4 output valid by IfcOpenShell's validator (schema and EXPRESS rules);
+  plan in SVG at scale. 295 tests on Python 3.13 and 3.11.
+- **Not yet met:** ADR 0007's manual checks (buildingSMART validation service and an
+  external viewer) need the owner; CI results have never been seen from here (private
+  repository, no `gh` login). Phase 1 is complete only when both are recorded here.
+
 ## 2026-11-16: M6 plan in SVG
 
 **Decided**
