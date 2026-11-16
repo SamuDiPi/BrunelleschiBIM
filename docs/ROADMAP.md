@@ -47,11 +47,13 @@ get a valid IFC4 file and a plan in SVG.
       (with the first real migration, 1 -> 2) stores walls.
 
 ### M3 Wall joins
-- [ ] Two walls meeting at an end point form a mitred L corner; footprints do not overlap
+- [x] Two walls meeting at an end point form a mitred L corner; footprints do not overlap
       and leave no gap (area test).
-- [ ] A wall ending on another wall's side forms a T join (butt).
-- [ ] Moving a wall end regenerates only the joins it takes part in.
-- [ ] Documented behaviour for the cases we do not handle yet (X crossings, more than two
+- [x] A wall ending on another wall's side forms a T join (butt); so does a wall
+      ending where a wall is split in two straight pieces.
+- [x] Moving a wall end regenerates only the joins it takes part in (cache in `regen/`,
+      tested by the exact set of recomputed join points).
+- [x] Documented behaviour for the cases we do not handle yet (X crossings, more than two
       walls at a point, non-zero-angle near-parallel walls).
 
 ### M4 Hosted door and window

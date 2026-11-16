@@ -3,6 +3,47 @@
 One entry per working session: what was decided, what was verified, what is open. Newest
 first.
 
+## 2026-11-16: M3 wall joins
+
+**Decided**
+
+- Joins are derived, never stored. Wall ends meet when their coordinates are equal on a
+  micrometre grid; a T needs the end exactly on the other wall's centre line. Walls whose
+  vertical extents do not overlap never join (storeys join separately at a shared
+  corner).
+- Supported: L corners by mitre (any thickness pair), straight continuations, T butts,
+  and a wall ending where a wall is split in two equal-thickness straight pieces (found
+  by a scale test: without it every split wall with a partition was unsupported).
+- Unsupported cases leave square ends and produce a `JoinIssue`, never a silent result:
+  more than two walls at a point otherwise, X crossings, walls lying on each other,
+  corners beyond a mitre limit of 10 half-thicknesses (sharper than about 11.5 degrees,
+  or nearly straight walls of different thickness), cuts that pass the far end of a
+  short wall.
+- `regen/` exists now: a per-project cache with diff-based invalidation (see
+  ARCHITECTURE). Shapely 2.2 is a runtime dependency (already chosen in ADR 0002), used
+  for polygons and validity; the join maths is plain 2D vector code.
+- New command `bbim wall joins`; `wall list --json` includes each wall's cut footprint.
+
+**Verified**
+
+- 191 tests pass on Python 3.13 and 3.11; ruff and mypy strict clean. Area tests: an L
+  has exactly thickness x centre-line length, footprints never overlap, the corner
+  square is covered (no gap), a closed room is a ring with one hole, two rooms sharing
+  a split wall give two holes.
+- The incremental test moves one room corner and checks that exactly four join points
+  are recomputed and that another room's footprints are reused objects.
+- Found by tests: the cache forgot a freshly solved corner when the old corner was
+  processed after the new one. Fixed by clearing all affected ends before solving.
+- Real CLI session on the M2 file: closing the ground floor room and adding a 12 cm
+  partition gave four mitres and two tees; the first-floor wall above a ground-floor
+  wall did not join it; a free wall crossing the partition was reported.
+
+**Open**
+
+- Four-way crossings and other multi-wall points (Revit handles them; we report them).
+- O(n²) rebuild; add a spatial index when models grow.
+- No visual check yet: the plan in SVG (M6) will be the first one.
+
 ## 2026-11-16: M2 walls bound to levels
 
 **Decided**
