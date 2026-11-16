@@ -360,6 +360,39 @@ def _cmd_check(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def _print_validation(path: str) -> int:
+    from brunelleschi.ifc import validate_ifc
+
+    result = validate_ifc(path)
+    scope = "schema and rules" if result.rules_checked else "schema only (install pytest for rules)"
+    for issue in result.issues:
+        print(f"  {issue.level}: {issue.message} {issue.instance}".rstrip())
+    if result.issues:
+        print(f"{path}: {len(result.issues)} problem(s) found ({scope})", file=sys.stderr)
+        return EXIT_ERROR
+    print(f"{path}: valid IFC4 ({scope})")
+    return EXIT_OK
+
+
+def _cmd_ifc_export(args: argparse.Namespace) -> int:
+    # Imported here: IfcOpenShell takes a moment to load and most commands do not need it.
+    from brunelleschi.ifc import write_ifc
+
+    project = api.load(args.file)
+    write_ifc(project, args.output)
+    print(
+        f"wrote {args.output}: {len(project.levels)} storeys, {len(project.walls)} walls, "
+        f"{len(project.doors)} doors, {len(project.windows)} windows"
+    )
+    return _print_validation(args.output) if args.validate else EXIT_OK
+
+
+def _cmd_ifc_validate(args: argparse.Namespace) -> int:
+    if not Path(args.ifc).is_file():
+        raise api.BrunelleschiError(f"file not found: {args.ifc}")
+    return _print_validation(args.ifc)
+
+
 def _cmd_schema(args: argparse.Namespace) -> int:
     schema = api.json_schema(args.schema_version)
     text = json.dumps(schema, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
@@ -405,6 +438,17 @@ def build_parser() -> argparse.ArgumentParser:
     _wall_parsers(sub)
     _hosted_parsers(sub, "door")
     _hosted_parsers(sub, "window")
+
+    ifc = sub.add_parser("ifc", help="export and validate IFC4 files")
+    isub = ifc.add_subparsers(dest="ifc_command", metavar="ACTION", required=True)
+    p = isub.add_parser("export", help="write the project as an IFC4 file")
+    p.add_argument("file", help="the .bbim project")
+    p.add_argument("output", help="the .ifc file to write")
+    p.add_argument("--validate", action="store_true", help="validate the written file")
+    p.set_defaults(func=_cmd_ifc_export)
+    p = isub.add_parser("validate", help="validate an IFC file (schema and rules)")
+    p.add_argument("ifc", help="the .ifc file")
+    p.set_defaults(func=_cmd_ifc_validate)
 
     p = sub.add_parser("check", help="list geometric warnings (joins, openings)")
     p.add_argument("file")
