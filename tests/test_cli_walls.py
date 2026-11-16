@@ -177,3 +177,39 @@ def test_negative_decimal_comma(house: Path, capsys: pytest.CaptureFixture[str])
     assert _add(house, "--base-offset", "-0,15", "--top", "Primo piano", "--top-offset", "-,2") == 0
     (row,) = _walls(house, capsys)
     assert (row["base_offset"], row["top_offset"]) == (-0.15, -0.2)
+
+
+def _wall_cmd(house: Path, start: str, end: str) -> None:
+    x0, y0 = start.split()
+    x1, y1 = end.split()
+    args = ["wall", "add", str(house), "--start", x0, y0, "--end", x1, y1]
+    assert main([*args, "--thickness", "0.3", "--base", "Piano terra", "--top", "Primo piano"]) == 0
+
+
+def test_joins_command(house: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    capsys.readouterr()
+    assert main(["wall", "joins", str(house)]) == 0
+    assert capsys.readouterr().out.strip() == "no joins"
+    _wall_cmd(house, "0 0", "5 0")
+    _wall_cmd(house, "0 0", "0 4")
+    _wall_cmd(house, "2 0", "2 3")
+    _wall_cmd(house, "-1 2", "1 2")  # crosses the wall from (0, 0) to (0, 4)
+    capsys.readouterr()
+    assert main(["wall", "joins", str(house)]) == 0
+    lines = capsys.readouterr().out.splitlines()
+    assert lines[0].startswith("mitre     (0.000, 0.000)")
+    assert lines[1].startswith("tee       (2.000, 0.000)")
+    assert lines[2].startswith("warning   (0.000, 2.000)")
+    assert "crossings are not joined yet" in lines[2]
+    assert main(["wall", "joins", str(house), "--json"]) == 0
+    data = json.loads(capsys.readouterr().out)
+    assert [j["kind"] for j in data["joins"]] == ["mitre", "tee"]
+    assert len(data["issues"]) == 1
+
+
+def test_list_json_has_cut_footprints(house: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    _wall_cmd(house, "0 0", "5 0")
+    _wall_cmd(house, "0 0", "0 4")
+    first = _walls(house, capsys)[0]
+    corners = {tuple(round(v, 9) for v in c) for c in first["footprint"]}  # type: ignore[attr-defined]
+    assert corners == {(-0.15, -0.15), (5.0, -0.15), (5.0, 0.15), (0.15, 0.15)}

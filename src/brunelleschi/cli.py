@@ -198,13 +198,51 @@ def _cmd_wall_delete(args: argparse.Namespace) -> int:
 def _cmd_wall_list(args: argparse.Namespace) -> int:
     project = api.load(args.file)
     if args.json:
-        rows = [_wall_row(project, w) for w in project.walls]
+        footprints = api.wall_geometry(project).footprints
+        rows = [
+            _wall_row(project, w) | {"footprint": [list(c) for c in footprints[w.id].corners]}
+            for w in project.walls
+        ]
         print(json.dumps(rows, indent=2, ensure_ascii=False))
         return EXIT_OK
     if not project.walls:
         print("no walls")
     for wall in project.walls:
         print(_describe_wall(project, wall))
+    return EXIT_OK
+
+
+def _pt(p: tuple[float, float]) -> str:
+    return f"({p[0]:.3f}, {p[1]:.3f})"
+
+
+def _cmd_wall_joins(args: argparse.Namespace) -> int:
+    project = api.load(args.file)
+    geometry = api.wall_geometry(project)
+    if args.json:
+        data = {
+            "joins": [
+                {
+                    "kind": str(j.kind),
+                    "point": list(j.point),
+                    "walls": [str(w) for w in j.walls],
+                }
+                for j in geometry.joins
+            ],
+            "issues": [
+                {"point": list(i.point), "walls": [str(w) for w in i.walls], "message": i.message}
+                for i in geometry.issues
+            ],
+        }
+        print(json.dumps(data, indent=2, ensure_ascii=False))
+        return EXIT_OK
+    if not geometry.joins and not geometry.issues:
+        print("no joins")
+    for j in geometry.joins:
+        print(f"{j.kind:<9} {_pt(j.point):<22} " + " ".join(api.short_id(w) for w in j.walls))
+    for i in geometry.issues:
+        walls = " ".join(api.short_id(w) for w in i.walls)
+        print(f"{'warning':<9} {_pt(i.point):<22} {walls}: {i.message}")
     return EXIT_OK
 
 
@@ -311,6 +349,11 @@ def _wall_parsers(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> N
     p.add_argument("file")
     p.add_argument("--json", action="store_true", help="machine-readable output")
     p.set_defaults(func=_cmd_wall_list)
+
+    p = wsub.add_parser("joins", help="list wall joins and walls that could not be joined")
+    p.add_argument("file")
+    p.add_argument("--json", action="store_true", help="machine-readable output")
+    p.set_defaults(func=_cmd_wall_joins)
 
 
 def _wall_options(p: argparse.ArgumentParser, *, required: bool) -> None:
