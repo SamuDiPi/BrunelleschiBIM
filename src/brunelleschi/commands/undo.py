@@ -65,3 +65,13 @@ def clear_history(project: Project) -> None:
     h = history(project)
     h.done.clear()
     h.undone.clear()
+
+
+def current_step(project: Project) -> object | None:
+    """An opaque marker of the latest step, or None at the start of the history.
+
+    Compare two markers with ``is`` to know whether the project changed in between, for
+    example to show unsaved changes: undoing back to the saved state gives the same marker.
+    """
+    done = history(project).done
+    return done[-1] if done else None
