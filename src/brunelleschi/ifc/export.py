@@ -18,8 +18,10 @@ from __future__ import annotations
 
 import math
 import os
+import tempfile
 import uuid
 from collections.abc import Sequence
+from pathlib import Path
 from typing import Any, Final
 from uuid import UUID
 
@@ -269,5 +271,18 @@ def export_ifc(project: Project) -> ifcopenshell.file:
 
 
 def write_ifc(project: Project, path: str | os.PathLike[str]) -> None:
-    """Write the project to an IFC4 (STEP) file."""
-    export_ifc(project).write(str(path))
+    """Write the project to an IFC4 (STEP) file.
+
+    Like saving a project: the folder must exist, and the old file is replaced only once
+    the new one is complete.
+    """
+    target = Path(path)
+    text = export_ifc(project).to_string()
+    fd, tmp = tempfile.mkstemp(prefix=f".{target.name}.", suffix=".tmp", dir=target.parent)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as fh:
+            fh.write(text)
+        Path(tmp).replace(target)
+    except BaseException:
+        Path(tmp).unlink(missing_ok=True)
+        raise
