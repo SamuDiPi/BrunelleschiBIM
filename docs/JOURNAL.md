@@ -3,6 +3,25 @@
 One entry per working session: what was decided, what was verified, what is open. Newest
 first.
 
+## 2026-11-16: Phase 2 planned
+
+**Decided with the owner**
+
+- Phase 2 builds the first interface now, rather than first enriching the headless model
+  (wall types, slabs, rooms, dimensions, schedules), which was the architect's
+  recommendation. The costs were stated and accepted: undo/redo becomes a prerequisite,
+  the 3D view and packaging decisions are taken now, and model features other than
+  rooms move to a later phase while the interface is built on the Phase 1 model.
+- DXF for CartesioCAD must be an editable drawing: layers, hatches, blocks.
+- Rooms with the Italian checks (window-to-floor ratio, minimum areas and heights) are in
+  Phase 2, as M14.
+- Milestones M8-M15 in `ROADMAP.md`. M8 is spikes only: measured comparisons, then ADRs
+  decided by the owner.
+
+**Open from Phase 1**
+
+- ADR 0007 manual checks of the IFC (owner); CI results (owner).
+
 ## 2026-11-16: M7 Phase 1 demonstration, and where Phase 1 stands
 
 **Done**

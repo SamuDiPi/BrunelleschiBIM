@@ -11,12 +11,11 @@ the ADRs in `docs/adr/` before changing anything they cover.
 
 ## Current state
 
-Phase 0 approved. M0, M1 (project, levels, `.bbim` file), M2 (walls bound to levels,
+Phase 0 approved. Phase 2 (first interface, M8-M15) is planned and approved; see
+`docs/ROADMAP.md`. Phase 1: M0, M1 (project, levels, `.bbim` file), M2 (walls bound to levels,
 file version 2), M3 (wall joins, `regen/` cache), M4 (doors and windows, file version 3)
 M5 (IFC4 export, file version 4), M6 (plan in SVG) and M7 (demonstration, `examples/`)
-done. Phase 1 still waits for M5's manual checks by the owner and a look at CI. The next
-phase is not broken down yet: see "Later" in `docs/ROADMAP.md` and plan it with the
-owner before starting.
+done. Phase 1 still waits for M5's manual checks by the owner and a look at CI.
 
 Look at drawings, do not only test them: render with `tools/render_svg.py` (see its
 docstring) and read the PNG. Golden files are accepted only after such a look.

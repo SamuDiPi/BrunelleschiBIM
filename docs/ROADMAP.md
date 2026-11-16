@@ -91,12 +91,69 @@ get a valid IFC4 file and a plan in SVG.
       the model and in the IFC geometry.
 - [x] `README.md` shows the scenario (both snippets run as written).
 
+## Phase 2: first interface
+
+Goal (approved by the owner on 2026-11-16, who chose the interface before more model
+content): a desktop application that opens, edits and saves the Phase 1 model with the
+mouse, with undo, a 3D view, DXF export to CartesioCAD, rooms with the Italian checks,
+packaged as a standalone Windows executable.
+
+Rules specific to this phase: the interface uses only `brunelleschi.api`; it is tested
+headless (pytest-qt) and looked at through window captures saved as images, never by
+driving the owner's screen. Editing stays minimal: walls with endpoint and grid snaps
+and ortho, doors and windows by clicking a wall, select, move, delete.
+
+### M8 Spikes and decisions (no product code)
+- [ ] 3D view: two or three candidates tried on the M7 house and on a larger generated
+      model; measured install size, start time, frame rate, picking, licence.
+- [ ] Executable: at least one packaging tool builds the core with PySide6, IfcOpenShell
+      and Shapely into a folder that runs without Python installed; measured size and
+      start time.
+- [ ] ADRs written with the numbers; the owner decides; ADR 0005 updated.
+
+### M9 Undo and redo in the core
+- [ ] Every command can be undone and redone through the API; a transaction is one step.
+- [ ] Property-based test: random command sequences, undo all gives the initial file
+      bytes, redo all gives the final ones.
+
+### M10 Main window
+- [ ] Open and save `.bbim`; levels and elements browser; properties panel that edits
+      parameters through commands; read-only 2D plan of the current level.
+- [ ] Opens the M7 house; changing a level elevation in the panel updates the plan and
+      can be undone. Checked with pytest-qt and window captures.
+
+### M11 Editing in plan
+- [ ] Draw walls with endpoint and grid snaps and ortho; place doors and windows by
+      clicking a wall; select, move and delete.
+- [ ] The M7 house can be rebuilt with the mouse (scripted with pytest-qt); every step
+      undoes.
+
+### M12 3D view
+- [ ] Read-only 3D view with the technology chosen in M8, synchronised with the model:
+      raising a level in the plan updates the 3D.
+
+### M13 DXF export for CartesioCAD
+- [ ] Editable plan in DXF: separate layers, cut walls as HATCH, doors and windows as
+      blocks, at real size in metres or millimetres (to decide with CartesioCAD's units).
+- [ ] The file is read without errors by CartesioCAD's `DxfReader` and looked at as an
+      image; `bbim plan --dxf` and a menu command.
+
+### M14 Rooms, areas and Italian checks
+- [ ] Rooms derived from walls on a level: name, net area, perimeter, height; IfcSpace in
+      the export; room tags in the plan.
+- [ ] Checks as warnings (CLI and interface): window-to-floor ratio of at least 1/8,
+      minimum room areas and heights (DM 5 July 1975); thresholds verified with the
+      owner on the text of the decree before they are coded.
+
+### M15 Executable and demonstration
+- [ ] A Windows executable that starts on a machine without Python, opens and edits the
+      demo house, exports IFC, SVG and DXF.
+
 ## Later (not yet broken down)
 
-In rough order: undo/redo exposed in the API; DXF export of plans for CartesioCAD; slabs
-and roofs; rooms and areas; sections and elevations; schedules; sheets and title blocks;
-IFC import (non-parametric); first interface milestone (including the 3D viewport
-choice); standalone executable; wall types with layers.
+In rough order: wall types with layers; slabs and roofs; dimensions, room tags and title
+blocks in plans; schedules; sections and elevations; sheets; IFC import
+(non-parametric).
 
 ## Risks being tracked
 
