@@ -29,8 +29,11 @@ def main() -> int:
         print(f"not a valid SVG: {sys.argv[1]}", file=sys.stderr)
         return 1
     k = float(sys.argv[3]) if len(sys.argv) == 4 else 4.0
-    box = renderer.viewBoxF()
-    image = QImage(int(box.width() * k), int(box.height() * k), QImage.Format.Format_ARGB32)
+    # Size from the sheet the SVG declares (width/height, read by Qt at 96 dpi), not from
+    # its viewBox, whose units are the writer's own choice.
+    size = renderer.defaultSize()
+    width_mm, height_mm = size.width() * 25.4 / 96, size.height() * 25.4 / 96
+    image = QImage(int(width_mm * k), int(height_mm * k), QImage.Format.Format_ARGB32)
     image.fill(QColor("white"))
     painter = QPainter(image)
     painter.setRenderHint(QPainter.RenderHint.Antialiasing)
