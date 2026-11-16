@@ -166,7 +166,7 @@ def _cmd_wall_add(args: argparse.Namespace) -> int:
         height=args.height,
     )
     api.save(project, args.file)
-    print(f"added wall {_describe_wall(project, wall)}")
+    print(wall.id if args.quiet else f"added wall {_describe_wall(project, wall)}")
     return EXIT_OK
 
 
@@ -300,7 +300,7 @@ def _cmd_hosted_add(args: argparse.Namespace) -> int:
             project, args.wall, args.position, args.width, args.height, args.sill
         )
     api.save(project, args.file)
-    print(f"added {_describe_hosted(project, element)}")
+    print(element.id if args.quiet else f"added {_describe_hosted(project, element)}")
     return EXIT_OK
 
 
@@ -532,6 +532,7 @@ def _wall_parsers(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> N
     p = wsub.add_parser("add", help="add a straight wall")
     p.add_argument("file")
     _wall_options(p, required=True)
+    p.add_argument("--quiet", "-q", action="store_true", help="print only the new id")
     p.set_defaults(func=_cmd_wall_add)
 
     p = wsub.add_parser("modify", help="change parameters of a wall")
@@ -565,6 +566,7 @@ def _hosted_parsers(sub: argparse._SubParsersAction[argparse.ArgumentParser], ki
     p.add_argument("file")
     p.add_argument("wall", help="host wall id (a unique prefix of at least 4 characters)")
     _hosted_options(p, kind, adding=True)
+    p.add_argument("--quiet", "-q", action="store_true", help="print only the new id")
     p.set_defaults(func=_cmd_hosted_add, kind=kind)
 
     p = gsub.add_parser("modify", help=f"change parameters of a {kind}")
