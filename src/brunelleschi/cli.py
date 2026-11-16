@@ -96,6 +96,8 @@ def _cmd_info(args: argparse.Namespace) -> int:
     print(f"project: {project.name}")
     print(f"levels:  {len(project.levels)}")
     print(f"walls:   {len(project.walls)}")
+    print(f"doors:   {len(project.doors)}")
+    print(f"windows: {len(project.windows)}")
     return EXIT_OK
 
 
@@ -189,9 +191,12 @@ def _cmd_wall_modify(args: argparse.Namespace) -> int:
 
 def _cmd_wall_delete(args: argparse.Namespace) -> int:
     project = api.load(args.file)
+    hosted = project.hosted_in(project.wall(args.wall).id)
     wall = api.delete_wall(project, args.wall)
     api.save(project, args.file)
     print(f"deleted wall {api.short_id(wall.id)}")
+    for e in hosted:
+        print(f"  and its {e.kind} {api.short_id(e.id)}")
     return EXIT_OK
 
 
@@ -246,6 +251,115 @@ def _cmd_wall_joins(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+def _hosted_row(project: api.Project, e: api.HostedElement) -> dict[str, object]:
+    o = api.wall_geometry(project).openings[e.id]
+    row: dict[str, object] = {
+        "id": str(e.id),
+        "kind": e.kind,
+        "wall": str(e.host_id),
+        "position": e.position,
+        "width": e.width,
+        "height": e.height,
+        "sill_height": e.sill_height,
+    }
+    if isinstance(e, api.Door):
+        row["swing"] = {"side": str(e.swing_side), "hinge": str(e.hinge)}
+    row["z_bottom"] = o.z_bottom
+    row["z_top"] = o.z_top
+    return row
+
+
+def _describe_hosted(project: api.Project, e: api.HostedElement) -> str:
+    o = api.wall_geometry(project).openings[e.id]
+    text = (
+        f"{e.kind:<6} {api.short_id(e.id)}  in wall {api.short_id(e.host_id)}  "
+        f"at {e.position:.3f} m  {e.width:.3f} x {e.height:.3f} m  "
+        f"sill {e.sill_height:.3f} m  z {o.z_bottom:+.3f} .. {o.z_top:+.3f} m"
+    )
+    if isinstance(e, api.Door):
+        text += f"  swings {e.swing_side}, hinge at {e.hinge}"
+    return text
+
+
+def _cmd_hosted_add(args: argparse.Namespace) -> int:
+    project = api.load(args.file)
+    element: api.HostedElement
+    if args.kind == "door":
+        element = api.add_door(
+            project,
+            args.wall,
+            args.position,
+            args.width,
+            args.height,
+            sill_height=args.sill or 0.0,
+            swing_side=args.swing or "left",
+            hinge=args.hinge or "start",
+        )
+    else:
+        element = api.add_window(
+            project, args.wall, args.position, args.width, args.height, args.sill
+        )
+    api.save(project, args.file)
+    print(f"added {_describe_hosted(project, element)}")
+    return EXIT_OK
+
+
+def _cmd_hosted_modify(args: argparse.Namespace) -> int:
+    project = api.load(args.file)
+    element = project.hosted_element(args.element)
+    if element.kind != args.kind:
+        raise api.NotFoundError(f"{args.element!r} is a {element.kind}, not a {args.kind}")
+    api.modify_hosted(
+        project,
+        element.id,
+        wall=args.wall,
+        position=args.position,
+        width=args.width,
+        height=args.height,
+        sill_height=args.sill,
+        swing_side=getattr(args, "swing", None),
+        hinge=getattr(args, "hinge", None),
+    )
+    api.save(project, args.file)
+    print(f"modified {_describe_hosted(project, element)}")
+    return EXIT_OK
+
+
+def _cmd_hosted_delete(args: argparse.Namespace) -> int:
+    project = api.load(args.file)
+    element = project.hosted_element(args.element)
+    if element.kind != args.kind:
+        raise api.NotFoundError(f"{args.element!r} is a {element.kind}, not a {args.kind}")
+    api.delete_hosted(project, element.id)
+    api.save(project, args.file)
+    print(f"deleted {element.kind} {api.short_id(element.id)}")
+    return EXIT_OK
+
+
+def _cmd_hosted_list(args: argparse.Namespace) -> int:
+    project = api.load(args.file)
+    elements = [e for e in project.hosted if e.kind == args.kind]
+    if args.json:
+        print(json.dumps([_hosted_row(project, e) for e in elements], indent=2))
+        return EXIT_OK
+    if not elements:
+        print(f"no {args.kind}s")
+    for e in elements:
+        print(_describe_hosted(project, e))
+    return EXIT_OK
+
+
+def _cmd_check(args: argparse.Namespace) -> int:
+    """Warnings about the model's geometry. The model itself is always valid once loaded."""
+    project = api.load(args.file)
+    issues = api.wall_geometry(project).issues
+    if not issues:
+        print("no warnings")
+    for i in issues:
+        print(f"warning {_pt(i.point)}: {i.message}")
+    return EXIT_OK
+
+
 def _cmd_schema(args: argparse.Namespace) -> int:
     schema = api.json_schema(args.schema_version)
     text = json.dumps(schema, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
@@ -289,6 +403,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     _level_parsers(sub)
     _wall_parsers(sub)
+    _hosted_parsers(sub, "door")
+    _hosted_parsers(sub, "window")
+
+    p = sub.add_parser("check", help="list geometric warnings (joins, openings)")
+    p.add_argument("file")
+    p.set_defaults(func=_cmd_check)
     return parser
 
 
@@ -354,6 +474,64 @@ def _wall_parsers(sub: argparse._SubParsersAction[argparse.ArgumentParser]) -> N
     p.add_argument("file")
     p.add_argument("--json", action="store_true", help="machine-readable output")
     p.set_defaults(func=_cmd_wall_joins)
+
+
+def _hosted_parsers(sub: argparse._SubParsersAction[argparse.ArgumentParser], kind: str) -> None:
+    group = sub.add_parser(kind, help=f"add, change, delete and list {kind}s")
+    gsub = group.add_subparsers(dest=f"{kind}_command", metavar="ACTION", required=True)
+    element_help = f"{kind} id (a unique prefix of at least 4 characters)"
+
+    p = gsub.add_parser("add", help=f"place a {kind} in a wall")
+    p.add_argument("file")
+    p.add_argument("wall", help="host wall id (a unique prefix of at least 4 characters)")
+    _hosted_options(p, kind, adding=True)
+    p.set_defaults(func=_cmd_hosted_add, kind=kind)
+
+    p = gsub.add_parser("modify", help=f"change parameters of a {kind}")
+    p.add_argument("file")
+    p.add_argument("element", metavar=kind.upper(), help=element_help)
+    p.add_argument("--wall", help="move it to another wall")
+    _hosted_options(p, kind, adding=False)
+    p.set_defaults(func=_cmd_hosted_modify, kind=kind)
+
+    p = gsub.add_parser("delete", help=f"delete a {kind}")
+    p.add_argument("file")
+    p.add_argument("element", metavar=kind.upper(), help=element_help)
+    p.set_defaults(func=_cmd_hosted_delete, kind=kind)
+
+    p = gsub.add_parser("list", help=f"list {kind}s")
+    p.add_argument("file")
+    p.add_argument("--json", action="store_true", help="machine-readable output")
+    p.set_defaults(func=_cmd_hosted_list, kind=kind)
+
+
+def _hosted_options(p: argparse.ArgumentParser, kind: str, *, adding: bool) -> None:
+    p.add_argument(
+        "--position",
+        type=_metres,
+        required=adding,
+        help="distance of the centre from the wall's start, in metres",
+    )
+    p.add_argument("--width", type=_metres, required=adding, help="metres")
+    p.add_argument("--height", type=_metres, required=adding, help="metres")
+    p.add_argument(
+        "--sill",
+        type=_metres,
+        required=adding and kind == "window",
+        help="height of the bottom above the wall's base, in metres"
+        + (" (default 0)" if kind == "door" and adding else ""),
+    )
+    if kind == "door":
+        p.add_argument(
+            "--swing",
+            choices=["left", "right"],
+            help="side the leaf opens to, seen from the wall's start (default left)",
+        )
+        p.add_argument(
+            "--hinge",
+            choices=["start", "end"],
+            help="jamb with the hinges: nearer the wall's start or end (default start)",
+        )
 
 
 def _wall_options(p: argparse.ArgumentParser, *, required: bool) -> None:
