@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
 
 from brunelleschi import api
 from brunelleschi.gui.document import Document
+from brunelleschi.gui.references import References
 
 
 def parse_metres(text: str) -> float:
@@ -28,14 +29,21 @@ def parse_metres(text: str) -> float:
     return float(text.strip().replace(",", "."))
 
 
+def _constant(text: str) -> Callable[[], str]:
+    return lambda: text
+
+
 def fmt(value: float) -> str:
     return f"{value:.3f}"
 
 
 class PropertiesPanel(QWidget):
-    def __init__(self, document: Document) -> None:
+    def __init__(self, document: Document, references: References | None = None) -> None:
         super().__init__()
         self.document = document
+        self.references = references
+        if references is not None:
+            references.loaded.connect(lambda _: self.rebuild())
         self._layout = QVBoxLayout(self)
         self.heading = QLabel()
         self.heading.setStyleSheet("font-weight: bold")
@@ -82,6 +90,7 @@ class PropertiesPanel(QWidget):
             "wall": self._build_wall,
             "door": self._build_hosted,
             "window": self._build_hosted,
+            "reference": self._build_reference,
         }[kind]
         builder(selected)
         self.refresh()
@@ -321,6 +330,19 @@ class PropertiesPanel(QWidget):
         )
         self._info("Length", lambda: f"{wall().length:.3f} m")
         self._info("Elevations", lambda: "{:+.3f} .. {:+.3f} m".format(*p.wall_z_range(wall())))
+
+    def _build_reference(self, reference_id: UUID) -> None:
+        p = self.document.project
+        reference = p.reference(reference_id)
+        self.heading.setText(f"Linked IFC: {reference.name}")
+        self._info("File", lambda: reference.path)
+        refs = self.references
+        if refs is None:
+            return
+        self._info("Content", lambda: refs.status(reference_id))
+        for name, elevation, level in refs.storey_matches(reference_id):
+            shown = level if level is not None else "no level: shown in 3D only"
+            self._info(f"Storey {name!r} ({elevation:+.2f} m)", _constant(shown))
 
     def _build_hosted(self, element_id: UUID) -> None:
         p = self.document.project

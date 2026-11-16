@@ -9,12 +9,13 @@ from __future__ import annotations
 import math
 from uuid import UUID
 
-from PySide6.QtCore import QPointF, Qt
+from PySide6.QtCore import QPointF, Qt, Signal
 from PySide6.QtGui import QColor, QKeyEvent, QMouseEvent, QPainter, QWheelEvent
 from PySide6.QtOpenGLWidgets import QOpenGLWidget
 
 from brunelleschi.gui.camera import OrbitCamera
 from brunelleschi.gui.document import Document
+from brunelleschi.gui.references import References
 from brunelleschi.gui.renderer import Renderer, surface_format
 from brunelleschi.gui.scene3d import Scene, build_scene
 
@@ -23,8 +24,11 @@ ORBIT_DEG_PER_PX = 0.4
 
 
 class Viewport3D(QOpenGLWidget):
-    def __init__(self, document: Document) -> None:
+    reference_picked = Signal(str)  # a click on an element of a linked IFC file
+
+    def __init__(self, document: Document, references: References | None = None) -> None:
         super().__init__()
+        self.references = references
         self.setFormat(surface_format())
         self.document = document
         self.camera = OrbitCamera.default()
@@ -46,7 +50,11 @@ class Viewport3D(QOpenGLWidget):
     # ------------------------------------------------------------ model
 
     def rebuild(self) -> None:
-        self.scene = build_scene(self.document.project)
+        linked: list[tuple[str, object]] = []
+        if self.references is not None:
+            names = {r.id: r.name for r in self.document.project.references}
+            linked = [(names.get(k, "IFC"), m) for k, m in self.references.models()]
+        self.scene = build_scene(self.document.project, linked)
         self.revision += 1
         if not self._fitted:
             self.fit()
@@ -86,7 +94,7 @@ class Viewport3D(QOpenGLWidget):
 
     # ------------------------------------------------------------ input
 
-    def pick_at(self, x: float, y: float) -> UUID | None:
+    def pick_at(self, x: float, y: float) -> UUID | str | None:
         """The element under a widget point, or None (works without OpenGL)."""
         origin, direction = self.camera.ray(x, y, max(self.width(), 1), max(self.height(), 1))
         return self.scene.pick(origin, direction)
@@ -111,7 +119,11 @@ class Viewport3D(QOpenGLWidget):
             moved = event.position() - self._press
             if math.hypot(moved.x(), moved.y()) < CLICK_PX:
                 picked = self.pick_at(event.position().x(), event.position().y())
-                self.document.select(picked)
+                if isinstance(picked, str):  # reference elements are read-only
+                    self.document.select(None)
+                    self.reference_picked.emit(picked)
+                else:
+                    self.document.select(picked)
         self._press = self._last = None
         self._button = Qt.MouseButton.NoButton
 

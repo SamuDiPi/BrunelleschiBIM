@@ -32,14 +32,17 @@ from PySide6.QtGui import (
 from PySide6.QtWidgets import QWidget
 
 from brunelleschi import api
+from brunelleschi.drawings.plan import DEFAULT_CUT_HEIGHT
 from brunelleschi.drawings.primitives import Arc, Area, Drawing, Line
 from brunelleschi.gui.document import Document
+from brunelleschi.gui.references import References
 from brunelleschi.gui.snap import Vec
 from brunelleschi.gui.tools import OpeningTool, SelectTool, Tool, WallTool
 
 POCHE = QColor("#a6a6a6")
 HIGHLIGHT = QColor("#1f6fd1")
 SNAP_MARK = QColor("#d1491f")
+REFERENCE = QColor("#8a8f99")
 # Layer -> (pen width in pixels, dashed)
 PENS: dict[str, tuple[float, bool]] = {
     "wall-projection": (1.0, False),
@@ -83,9 +86,10 @@ class PlanView(QWidget):
     status_changed = Signal(str)  # cursor position, snap and tool hint
     tool_changed = Signal(str)
 
-    def __init__(self, document: Document) -> None:
+    def __init__(self, document: Document, references: References | None = None) -> None:
         super().__init__()
         self.document = document
+        self.references = references
         self.level_id: UUID | None = None
         self.drawing = Drawing(())
         self.revision = 0  # increases every time the drawing is rebuilt (for tests)
@@ -94,6 +98,7 @@ class PlanView(QWidget):
         self._pan: QPointF | None = None
         self._right_press: QPointF | None = None
         self._fitted = False
+        self._auto_fit = True  # refit on resize until the user zooms or pans
         # Settings the tools read.
         self.grid: float | None = 0.10
         self.ortho = False
@@ -169,11 +174,13 @@ class PlanView(QWidget):
             self.scale = min(avail_w / w, avail_h / h)
             self._centre = ((x0 + x1) / 2, (y0 + y1) / 2)
         self._fitted = True
+        self._auto_fit = True
         self.update()
 
     def set_view(self, centre: Vec, scale: float) -> None:
         """Show ``centre`` in the middle at ``scale`` pixels per metre."""
         self._centre, self.scale, self._fitted = centre, scale, True
+        self._auto_fit = False
         self.update()
 
     def transform(self) -> QTransform:
@@ -202,6 +209,7 @@ class PlanView(QWidget):
         factor = 1.2 ** (event.angleDelta().y() / 120)
         before = self.to_model(event.position())
         self.scale = min(max(self.scale * factor, 0.5), 5000.0)
+        self._auto_fit = False
         after = self.to_model(event.position())
         self._centre = (
             self._centre[0] + before[0] - after[0],
@@ -223,6 +231,7 @@ class PlanView(QWidget):
         if self._pan is not None:
             delta = event.position() - self._pan
             self._pan = event.position()
+            self._auto_fit = False
             self._centre = (
                 self._centre[0] - delta.x() / self.scale,
                 self._centre[1] + delta.y() / self.scale,
@@ -251,7 +260,9 @@ class PlanView(QWidget):
             super().keyPressEvent(event)
 
     def resizeEvent(self, event: QResizeEvent) -> None:
-        if not self._fitted:
+        # Until the user zooms or pans, keep the whole drawing in view: the window often
+        # gets its final size only after a project has been opened.
+        if not self._fitted or self._auto_fit:
             self.fit()
 
     def _report(self, event: QMouseEvent) -> None:
@@ -270,6 +281,7 @@ class PlanView(QWidget):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.fillRect(self.rect(), QColor("white"))
         painter.setTransform(self.transform())
+        self._paint_references(painter)
         for primitive in self.drawing.primitives:
             if isinstance(primitive, Area):
                 path = QPainterPath()
@@ -294,6 +306,18 @@ class PlanView(QWidget):
         self.tool.paint(painter)
         self._paint_snap(painter)
         painter.end()
+
+    def _paint_references(self, painter: QPainter) -> None:
+        """Linked IFC files, cut at the same height as the plan, in grey."""
+        if self.references is None or self.level_id is None:
+            return
+        level = next((lv for lv in self.document.project.levels if lv.id == self.level_id), None)
+        if level is None:
+            return
+        painter.setPen(_pen(REFERENCE, 1.0))
+        for segments in self.references.plan_lines(level.id, level.elevation + DEFAULT_CUT_HEIGHT):
+            for (x0, y0), (x1, y1) in segments:
+                painter.drawLine(QPointF(x0, y0), QPointF(x1, y1))
 
     def _paint_selection(self, painter: QPainter) -> None:
         selected = self.document.selected

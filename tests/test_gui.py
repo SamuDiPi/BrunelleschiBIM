@@ -77,7 +77,13 @@ def browser_groups(win: MainWindow) -> list[str]:
 
 def test_opens_the_house(window: MainWindow, house_file: Path) -> None:
     assert window.windowTitle().startswith("casa.bbim - Casa")
-    assert browser_groups(window) == ["Levels (2)", "Walls (4)", "Doors (1)", "Windows (1)"]
+    assert browser_groups(window) == [
+        "Levels (2)",
+        "Walls (4)",
+        "Doors (1)",
+        "Windows (1)",
+        "References (0)",
+    ]
     assert window.level_combo.count() == 2
     assert window.level_combo.currentText().startswith("Piano terra")
     layers = {p.layer for p in window.plan.drawing.primitives}
@@ -214,7 +220,13 @@ def test_save_clears_the_modified_mark(window: MainWindow, house_file: Path) -> 
 def test_new_project(window: MainWindow) -> None:
     window.new_file()
     assert window.windowTitle().startswith("untitled - Untitled")
-    assert browser_groups(window) == ["Levels (1)", "Walls (0)", "Doors (0)", "Windows (0)"]
+    assert browser_groups(window) == [
+        "Levels (1)",
+        "Walls (0)",
+        "Doors (0)",
+        "Windows (0)",
+        "References (0)",
+    ]
 
 
 def test_window_can_be_captured(window: MainWindow, tmp_path: Path) -> None:
@@ -273,3 +285,17 @@ def test_export_to_a_bad_place(window: MainWindow, tmp_path: Path) -> None:
     assert "Cannot export x.ifc" in window.status.text()
     assert not (tmp_path / "no-such-folder").exists()  # no folder created behind our back
     assert not window.export_plan_to(tmp_path / "no-such-folder" / "x.svg")
+
+
+def test_plan_keeps_fitting_until_the_user_navigates(window: MainWindow, qtbot: QtBot) -> None:
+    window.show()  # offscreen: laid out in memory only
+    window.resize(700, 450)
+    qtbot.wait(10)
+    small = window.plan.scale
+    window.resize(1600, 1000)
+    qtbot.wait(10)
+    assert window.plan.scale > small  # refitted to the larger view
+    window.plan.set_view((0.0, 0.0), 10.0)  # as if the user had zoomed
+    window.resize(900, 600)
+    qtbot.wait(10)
+    assert window.plan.scale == 10.0

@@ -141,4 +141,6 @@ class Document(QObject):
         for e in p.hosted:
             if e.id == element_id:
                 return e.kind
+        if any(r.id == element_id for r in p.references):
+            return "reference"
         return None

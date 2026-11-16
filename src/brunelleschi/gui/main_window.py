@@ -25,6 +25,7 @@ from brunelleschi.gui.browser import ProjectBrowser
 from brunelleschi.gui.document import Document
 from brunelleschi.gui.plan_view import PlanView
 from brunelleschi.gui.properties import PropertiesPanel
+from brunelleschi.gui.references import References, path_to_store
 from brunelleschi.gui.renderer import gl_unavailable_reason
 from brunelleschi.gui.viewport import Viewport3D
 
@@ -35,10 +36,12 @@ class MainWindow(QMainWindow):
     def __init__(self, document: Document | None = None) -> None:
         super().__init__()
         self.document = document or Document()
-        self.plan = PlanView(self.document)
-        self.browser = ProjectBrowser(self.document)
-        self.properties = PropertiesPanel(self.document)
-        self.viewport = Viewport3D(self.document)
+        self.references = References(self.document)
+        self.plan = PlanView(self.document, self.references)
+        self.browser = ProjectBrowser(self.document, self.references)
+        self.properties = PropertiesPanel(self.document, self.references)
+        self.viewport = Viewport3D(self.document, self.references)
+        self.references.loaded.connect(self._reference_loaded)
         # Where OpenGL 3.3 is missing (old drivers, virtual machines), say so instead of
         # showing an empty panel. The viewport object still follows the model.
         reason = gl_unavailable_reason()
@@ -61,6 +64,7 @@ class MainWindow(QMainWindow):
         self.coords = QLabel()  # cursor position, snap and tool hint
         self.statusBar().addWidget(self.status, 1)
         self.statusBar().addPermanentWidget(self.coords)
+        self.viewport.reference_picked.connect(self.status.setText)
         self._actions()
         self._toolbar()
         self.document.changed.connect(self._update_state)
@@ -96,6 +100,7 @@ class MainWindow(QMainWindow):
         self.save_action = self._action("&Save", self.save, std.Save)
         self.save_as_action = self._action("Save &As...", self.save_as_dialog, std.SaveAs)
         self.export_ifc_action = self._action("Export &IFC...", self.export_ifc_dialog)
+        self.link_ifc_action = self._action("&Link IFC...", self.link_ifc_dialog)
         self.export_plan_action = self._action("Export &plan as SVG...", self.export_plan_dialog)
         self.quit_action = self._action("&Quit", self.close, std.Quit)
         self.undo_action = self._action("&Undo", self.undo, std.Undo)
@@ -128,6 +133,8 @@ class MainWindow(QMainWindow):
         file_menu = self.menuBar().addMenu("&File")
         for a in (self.new_action, self.open_action, self.save_action, self.save_as_action):
             file_menu.addAction(a)
+        file_menu.addSeparator()
+        file_menu.addAction(self.link_ifc_action)
         file_menu.addSeparator()
         file_menu.addAction(self.export_ifc_action)
         file_menu.addAction(self.export_plan_action)
@@ -244,6 +251,8 @@ class MainWindow(QMainWindow):
             self.document.edit(lambda: api.delete_wall(p, selected))
         elif kind in ("door", "window"):
             self.document.edit(lambda: api.delete_hosted(p, selected))
+        elif kind == "reference":
+            self.document.edit(lambda: api.remove_reference(p, selected))
 
     def show_error(self, message: str) -> None:
         self.status.setText(message)
@@ -310,6 +319,34 @@ class MainWindow(QMainWindow):
     def save_as_dialog(self) -> bool:
         name, _ = QFileDialog.getSaveFileName(self, "Save project", "", FILE_FILTER)
         return self.save_to(Path(name)) if name else False
+
+    # ------------------------------------------------------- references
+
+    def link_ifc(self, path: Path) -> bool:
+        """Link an IFC file; it loads in the background and appears when ready."""
+        if not path.is_file():
+            self.show_error(f"file not found: {path}")
+            return False
+        stored = path_to_store(self.document, path)
+        p = self.document.project
+        if not self.document.edit(lambda: api.add_reference(p, stored, path.stem)):
+            return False
+        self.document.select(p.references[-1].id)
+        self.status.setText(f"Loading {path.name}...")
+        return True
+
+    def link_ifc_dialog(self) -> None:
+        name, _ = QFileDialog.getOpenFileName(self, "Link IFC", "", "IFC (*.ifc)")
+        if name:
+            self.link_ifc(Path(name))
+
+    def _reference_loaded(self, ref_id: object) -> None:
+        self.plan.update()
+        self.viewport.rebuild()
+        refs = {r.id: r for r in self.document.project.references}
+        reference = refs.get(ref_id)  # type: ignore[call-overload]
+        if reference is not None:
+            self.status.setText(f"{reference.name}: {self.references.status(reference.id)}")
 
     # ----------------------------------------------------------- export
 

@@ -9,6 +9,7 @@ from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem
 
 from brunelleschi import api
 from brunelleschi.gui.document import Document
+from brunelleschi.gui.references import References
 
 ID_ROLE = Qt.ItemDataRole.UserRole
 
@@ -16,9 +17,12 @@ ID_ROLE = Qt.ItemDataRole.UserRole
 class ProjectBrowser(QTreeWidget):
     """Selecting an item selects the element in the document, and the other way round."""
 
-    def __init__(self, document: Document) -> None:
+    def __init__(self, document: Document, references: References | None = None) -> None:
         super().__init__()
         self.document = document
+        self.references = references
+        if references is not None:
+            references.loaded.connect(lambda _: self.rebuild())
         self.setHeaderHidden(True)
         self._updating = False
         document.changed.connect(self.rebuild)
@@ -42,6 +46,7 @@ class ProjectBrowser(QTreeWidget):
                 ("Walls", [(w.id, self._wall_text(p, w)) for w in p.walls]),
                 ("Doors", [(d.id, self._hosted_text(d)) for d in p.doors]),
                 ("Windows", [(w.id, self._hosted_text(w)) for w in p.windows]),
+                ("References", [(r.id, self._reference_text(r)) for r in p.references]),
             ]
             for title, rows in groups:
                 parent = QTreeWidgetItem([f"{title} ({len(rows)})"])
@@ -64,6 +69,10 @@ class ProjectBrowser(QTreeWidget):
     @staticmethod
     def _hosted_text(e: api.HostedElement) -> str:
         return f"{e.kind.capitalize()} {api.short_id(e.id)}   {e.width:.2f} x {e.height:.2f} m"
+
+    def _reference_text(self, r: api.IfcReference) -> str:
+        status = self.references.status(r.id) if self.references is not None else ""
+        return f"{r.name}   {status}".rstrip()
 
     def item_for(self, element_id: UUID) -> QTreeWidgetItem | None:
         for i in range(self.topLevelItemCount()):
