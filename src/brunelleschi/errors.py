@@ -15,6 +15,10 @@ class NotFoundError(BrunelleschiError):
     """An element looked up by id or name does not exist."""
 
 
+class AmbiguousReferenceError(BrunelleschiError):
+    """A short id matches more than one element; a longer prefix is needed."""
+
+
 class ProjectFileError(BrunelleschiError):
     """A project file cannot be read: wrong format, corrupt content or invalid data."""
 

@@ -7,17 +7,12 @@ from uuid import UUID, uuid4
 
 from brunelleschi.commands.transaction import transaction
 from brunelleschi.errors import ModelError
-from brunelleschi.model import Level, Project
+from brunelleschi.model import Level, Project, short_id
 
 
 def _dependents(project: Project, level: Level) -> list[str]:
-    """Descriptions of the elements bound to a level.
-
-    No element can reference a level yet; walls do from milestone M2. The hook exists
-    now so that deleting a level is already guarded in one place.
-    """
-    del project, level
-    return []
+    """Descriptions of the elements bound to a level."""
+    return [f"wall {short_id(w.id)}" for w in project.walls_on_level(level.id)]
 
 
 def add_level(
@@ -41,7 +36,8 @@ def rename_level(project: Project, ref: UUID | str, new_name: str) -> Level:
 def set_level_elevation(project: Project, ref: UUID | str, elevation: float) -> Level:
     """Move a level to a new elevation, in metres.
 
-    From milestone M2, elements bound to the level follow it.
+    Walls bound to the level follow it, because their elevations are derived from it.
+    The move is refused if it would put a wall's top at or below its base.
     """
     if not math.isfinite(float(elevation)):
         raise ModelError("the elevation must be a finite number of metres")

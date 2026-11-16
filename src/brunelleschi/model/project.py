@@ -4,18 +4,28 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from dataclasses import dataclass, field
+from typing import ClassVar, TypeVar
 from uuid import UUID
 
-from brunelleschi.errors import ModelError, NotFoundError
+from brunelleschi.errors import AmbiguousReferenceError, ModelError, NotFoundError
 from brunelleschi.model.level import Level
-from brunelleschi.model.units import MAX_ABS_COORDINATE, is_valid_length
+from brunelleschi.model.units import LENGTH_TOLERANCE, MAX_ABS_COORDINATE, is_valid_length
+from brunelleschi.model.wall import TopAtLevel, Wall
 
 MAX_NAME_LENGTH = 200
+
+# Shortest id prefix accepted when an element is referred to by a short id.
+MIN_ID_PREFIX = 4
 
 
 def normalize_name(name: str) -> str:
     """Names are compared without surrounding spaces and without case."""
     return name.strip().casefold()
+
+
+def short_id(element_id: UUID) -> str:
+    """The first eight hex digits of an id, as shown to users (like a short git hash)."""
+    return str(element_id)[:8]
 
 
 @dataclass(slots=True)
@@ -26,10 +36,14 @@ class Project:
     Mutating methods are for ``brunelleschi.commands`` only; other code reads.
     """
 
+    # The attributes that hold elements, by id. Transactions snapshot exactly these.
+    STORES: ClassVar[tuple[str, ...]] = ("_levels", "_walls")
+
     name: str
     _levels: dict[UUID, Level] = field(default_factory=dict)
+    _walls: dict[UUID, Wall] = field(default_factory=dict)
 
-    # ------------------------------------------------------------------ queries
+    # ------------------------------------------------------------------ levels
 
     @property
     def levels(self) -> list[Level]:
@@ -56,6 +70,30 @@ class Project:
     def __iter__(self) -> Iterator[Level]:
         return iter(self._levels.values())
 
+    # ------------------------------------------------------------------- walls
+
+    @property
+    def walls(self) -> list[Wall]:
+        """Walls in creation order."""
+        return list(self._walls.values())
+
+    def wall(self, ref: UUID | str) -> Wall:
+        """A wall by id, or by a unique prefix of its id (at least four characters)."""
+        return _by_id(self._walls, ref, "wall")
+
+    def walls_on_level(self, level_id: UUID) -> list[Wall]:
+        """Walls whose base or top is bound to a level, in creation order."""
+        return [w for w in self._walls.values() if level_id in w.level_ids()]
+
+    def wall_z_range(self, wall: Wall) -> tuple[float, float]:
+        """Absolute elevations of the wall's base and top, derived from its levels."""
+        base = self.level(wall.base_level_id).elevation + wall.base_offset
+        if isinstance(wall.top, TopAtLevel):
+            top = self.level(wall.top.level_id).elevation + wall.top.offset
+        else:
+            top = base + wall.top.height
+        return base, top
+
     # --------------------------------------------------------------- mutations
 
     def _add_level(self, level: Level) -> None:
@@ -69,6 +107,17 @@ class Project:
         except KeyError:
             raise NotFoundError(f"no level with id {level_id}") from None
 
+    def _add_wall(self, wall: Wall) -> None:
+        if wall.id in self._walls:
+            raise ModelError(f"a wall with id {wall.id} already exists")
+        self._walls[wall.id] = wall
+
+    def _remove_wall(self, wall_id: UUID) -> Wall:
+        try:
+            return self._walls.pop(wall_id)
+        except KeyError:
+            raise NotFoundError(f"no wall with id {wall_id}") from None
+
     # --------------------------------------------------------------- invariants
 
     def check(self) -> None:
@@ -76,6 +125,12 @@ class Project:
         problems: list[str] = []
         if not self.name.strip():
             problems.append("the project name is empty")
+        self._check_levels(problems)
+        self._check_walls(problems)
+        if problems:
+            raise ModelError("; ".join(problems))
+
+    def _check_levels(self, problems: list[str]) -> None:
         seen: dict[str, Level] = {}
         for level in self._levels.values():
             label = f"level {level.name!r}"
@@ -85,10 +140,7 @@ class Project:
             elif len(level.name) > MAX_NAME_LENGTH:
                 problems.append(f"{label}: name longer than {MAX_NAME_LENGTH} characters")
             if not is_valid_length(level.elevation):
-                problems.append(
-                    f"{label}: elevation must be a finite number of metres within "
-                    f"±{MAX_ABS_COORDINATE:g}"
-                )
+                problems.append(f"{label}: elevation {_LENGTH_RULE}")
             key = normalize_name(level.name)
             if key and key in seen:
                 problems.append(
@@ -96,5 +148,57 @@ class Project:
                     "(names must be unique, ignoring case)"
                 )
             seen.setdefault(key, level)
-        if problems:
-            raise ModelError("; ".join(problems))
+
+    def _check_walls(self, problems: list[str]) -> None:
+        for wall in self._walls.values():
+            label = f"wall {short_id(wall.id)}"
+            numbers = {
+                "start x": wall.start.x,
+                "start y": wall.start.y,
+                "end x": wall.end.x,
+                "end y": wall.end.y,
+                "thickness": wall.thickness,
+                "base offset": wall.base_offset,
+            }
+            if isinstance(wall.top, TopAtLevel):
+                numbers["top offset"] = wall.top.offset
+            else:
+                numbers["height"] = wall.top.height
+            bad = [k for k, v in numbers.items() if not is_valid_length(v)]
+            if bad:
+                problems.append(f"{label}: {', '.join(bad)} {_LENGTH_RULE}")
+                continue
+            if wall.length <= LENGTH_TOLERANCE:
+                problems.append(f"{label}: start and end are the same point")
+            if wall.thickness <= LENGTH_TOLERANCE:
+                problems.append(f"{label}: thickness must be greater than zero")
+            missing = [lid for lid in wall.level_ids() if lid not in self._levels]
+            if missing:
+                problems.append(f"{label}: bound to a level that does not exist")
+                continue
+            base, top = self.wall_z_range(wall)
+            if top - base <= LENGTH_TOLERANCE:
+                problems.append(f"{label}: top ({top:+.3f} m) must be above base ({base:+.3f} m)")
+
+
+_LENGTH_RULE = f"must be a finite number of metres within ±{MAX_ABS_COORDINATE:g}"
+
+
+T = TypeVar("T")
+
+
+def _by_id(store: dict[UUID, T], ref: UUID | str, kind: str) -> T:
+    if isinstance(ref, UUID):
+        try:
+            return store[ref]
+        except KeyError:
+            raise NotFoundError(f"no {kind} with id {ref}") from None
+    prefix = ref.strip().lower()
+    if len(prefix) < MIN_ID_PREFIX:
+        raise NotFoundError(f"{kind} id {ref!r} is too short (at least {MIN_ID_PREFIX} characters)")
+    matches = [item for key, item in store.items() if str(key).startswith(prefix)]
+    if not matches:
+        raise NotFoundError(f"no {kind} with id {ref!r}")
+    if len(matches) > 1:
+        raise AmbiguousReferenceError(f"{kind} id {ref!r} matches {len(matches)} {kind}s")
+    return matches[0]

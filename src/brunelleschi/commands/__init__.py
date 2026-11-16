@@ -13,5 +13,15 @@ from brunelleschi.commands.levels import (
     set_level_elevation,
 )
 from brunelleschi.commands.transaction import transaction
+from brunelleschi.commands.walls import add_wall, delete_wall, modify_wall
 
-__all__ = ["add_level", "delete_level", "rename_level", "set_level_elevation", "transaction"]
+__all__ = [
+    "add_level",
+    "add_wall",
+    "delete_level",
+    "delete_wall",
+    "modify_wall",
+    "rename_level",
+    "set_level_elevation",
+    "transaction",
+]

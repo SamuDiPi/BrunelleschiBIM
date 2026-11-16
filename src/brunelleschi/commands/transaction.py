@@ -11,9 +11,11 @@ from __future__ import annotations
 import copy
 from collections.abc import Iterator
 from contextlib import contextmanager
+from dataclasses import fields
+from typing import Any
 from uuid import UUID
 
-from brunelleschi.model import Level, Project
+from brunelleschi.model import Project
 
 # Projects with an open transaction, by identity. Nested transactions join the outer one.
 _open: set[int] = set()
@@ -55,12 +57,21 @@ class _Snapshot:
 
     def __init__(self, project: Project) -> None:
         self.name = project.name
-        self.levels: dict[UUID, Level] = dict(project._levels)  # original objects, in order
-        self.values: dict[UUID, Level] = {k: copy.copy(v) for k, v in project._levels.items()}
+        # For each store: the original objects in order, and a copy of their fields.
+        # Field values are immutable (numbers, strings, ids, frozen dataclasses), so a
+        # shallow copy is enough.
+        self.stores: dict[str, dict[UUID, Any]] = {}
+        self.values: dict[str, dict[UUID, Any]] = {}
+        for store in Project.STORES:
+            elements: dict[UUID, Any] = getattr(project, store)
+            self.stores[store] = dict(elements)
+            self.values[store] = {k: copy.copy(v) for k, v in elements.items()}
 
     def restore(self, project: Project) -> None:
         project.name = self.name
-        for level_id, level in self.levels.items():
-            saved = self.values[level_id]
-            level.name, level.elevation = saved.name, saved.elevation
-        project._levels = dict(self.levels)
+        for store, originals in self.stores.items():
+            for element_id, element in originals.items():
+                saved = self.values[store][element_id]
+                for f in fields(element):
+                    setattr(element, f.name, getattr(saved, f.name))
+            setattr(project, store, dict(originals))
