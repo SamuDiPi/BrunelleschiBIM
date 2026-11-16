@@ -104,12 +104,12 @@ driving the owner's screen. Editing stays minimal: walls with endpoint and grid 
 and ortho, doors and windows by clicking a wall, select, move, delete.
 
 ### M8 Spikes and decisions (no product code)
-- [ ] 3D view: two or three candidates tried on the M7 house and on a larger generated
+- [x] 3D view: two or three candidates tried on the M7 house and on a larger generated
       model; measured install size, start time, frame rate, picking, licence.
-- [ ] Executable: at least one packaging tool builds the core with PySide6, IfcOpenShell
+- [x] Executable: at least one packaging tool builds the core with PySide6, IfcOpenShell
       and Shapely into a folder that runs without Python installed; measured size and
       start time.
-- [ ] ADRs written with the numbers; the owner decides; ADR 0005 updated.
+- [~] ADRs written with the numbers (0008, 0009); the owner decides; ADR 0005 updated.
 
 ### M9 Undo and redo in the core
 - [ ] Every command can be undone and redone through the API; a transaction is one step.

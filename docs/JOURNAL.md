@@ -3,6 +3,41 @@
 One entry per working session: what was decided, what was verified, what is open. Newest
 first.
 
+## 2026-11-16: M8 spikes, 3D view and packaging
+
+**Verified (details and numbers in ADRs 0008 and 0009, scripts in `spikes/m8/`)**
+
+- Qt Quick 3D is GPLv3 or commercial only (Qt documentation) and Qt 3D is deprecated
+  since Qt 6.8: both excluded.
+- Three 3D candidates rendered the M7 house and a 480-wall model off screen, images looked
+  at, picking checked on a known wall: PyVista/VTK, our own OpenGL 3.3 in a Qt context,
+  pygfx/wgpu. All correct; performance does not separate VTK and our OpenGL once the scene
+  is one merged mesh; VTK adds about 300 MB to the executable; pygfx needs seconds on
+  first use and runs on Vulkan/D3D12.
+- The mesh source is the real cost: exporting the large model to IFC takes 2.8 s and
+  triangulating it 0.73 s on 22 threads (4.1 s on one). The interface must re-mesh only
+  changed elements.
+- PyInstaller 6.22.3 built the whole stack into a 269 MB folder that ran on this machine
+  with no Python on the PATH, started in about 1.1 s, and wrote an IFC valid with schema
+  and rules and an SVG identical to the core's.
+
+**Incidents during the spike (owner's screen)**
+
+- The first packaged builds opened windows on the owner's screen: PyInstaller's error
+  dialog (windowed build), then the probe's own main window, because IfcOpenShell ran
+  `sys.executable bootstrap.py`, which relaunched the frozen program. Both were closed
+  within minutes by killing the process tree. Since then packaged programs are run only
+  through `spikes/m8/runexe.py` (no console window, output to files, hard timeout,
+  process tree killed), the probe refuses unknown arguments, and the fixes are written in
+  ADR 0009 for the real build.
+
+**Open**
+
+- The owner decides ADRs 0008 (recommended: own OpenGL behind a `Viewport` interface)
+  and 0009 (recommended: PyInstaller one-folder). Then ADR 0005 is updated and M9 starts.
+- Not measured: a packaged VTK build (its size is estimated from the installed files),
+  Nuitka and Briefcase.
+
 ## 2026-11-16: Phase 2 planned
 
 **Decided with the owner**

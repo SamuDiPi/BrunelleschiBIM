@@ -13,3 +13,5 @@ record that supersedes the old one, not by editing history.
 | [0005](0005-ui-strategy.md) | Standalone desktop executable; CartesioCAD through files | proposed |
 | [0006](0006-project-file-format.md) | Documented JSON project file; IFC, DXF, SVG for exchange | proposed |
 | [0007](0007-ifc-version-and-validation.md) | Export IFC4, validate every export | proposed |
+| [0008](0008-3d-view.md) | 3D view: own OpenGL behind a small interface (recommended) | proposed, owner to decide |
+| [0009](0009-packaging.md) | Executable: PyInstaller, one-folder build (recommended) | proposed, owner to decide |
