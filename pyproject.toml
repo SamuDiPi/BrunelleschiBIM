@@ -87,5 +87,10 @@ warn_unreachable = true
 # IfcOpenShell is only partly typed; calls to it are confined to brunelleschi.ifc (ADR 0002)
 # and the IFC tests.
 [[tool.mypy.overrides]]
-module = ["brunelleschi.ifc.*", "tests.test_ifc", "test_ifc", "tests.test_demo", "test_demo"]
+module = [
+    "brunelleschi.ifc.*",
+    "tests.test_ifc", "test_ifc",
+    "tests.test_demo", "test_demo",
+    "tests.test_solids", "test_solids",
+]
 disallow_untyped_calls = false
