@@ -37,12 +37,14 @@ get a valid IFC4 file and a plan in SVG.
       (a test keeps it in sync) and a saved file validates against it.
 
 ### M2 Walls bound to levels
-- [ ] A straight wall has start, end, thickness, base level + offset, and either a top
+- [x] A straight wall has start, end, thickness, base level + offset, and either a top
       level + offset or an unconnected height.
-- [ ] Changing a level elevation changes the Z extent of every wall bound to it, and of
+- [x] Changing a level elevation changes the Z extent of every wall bound to it, and of
       no other wall (tested).
-- [ ] Deleting a level that walls depend on is refused, listing the walls.
-- [ ] Invalid walls (zero length, top below base) are rejected at commit.
+- [x] Deleting a level that walls depend on is refused, listing the walls.
+- [x] Invalid walls (zero length, top below base) are rejected at commit; so is a level
+      move that would put a wall top at or below its base. File format version 2
+      (with the first real migration, 1 -> 2) stores walls.
 
 ### M3 Wall joins
 - [ ] Two walls meeting at an end point form a mitred L corner; footprints do not overlap

@@ -11,12 +11,13 @@ the ADRs in `docs/adr/` before changing anything they cover.
 
 ## Current state
 
-Phase 0 approved. M0 (scaffolding) and M1 (project, levels, `.bbim` file) done; next
-is M2 (walls bound to levels). See `docs/ROADMAP.md`.
+Phase 0 approved. M0, M1 (project, levels, `.bbim` file) and M2 (walls bound to levels,
+file version 2) done; next is M3 (wall joins). See `docs/ROADMAP.md`.
 
-When the file format changes, regenerate the published schema (`bbim schema`, written
-with LF endings to `schemas/bbim-<n>.schema.json`); `tests/test_schema.py` fails if it
-is out of date.
+File format changes: add `storage/schema_v<n>.py`, a migration in
+`storage/migrations.py`, a sample of the previous version in `tests/data/`, and publish
+the schema with `bbim schema -o schemas/bbim-<n>.schema.json`. Released schema files
+never change; `tests/test_schema.py` checks every version.
 
 ## Commands
 

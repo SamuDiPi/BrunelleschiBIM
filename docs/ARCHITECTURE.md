@@ -63,6 +63,13 @@ touching the model.
 
 ## Change propagation
 
+**State at M2.** Derived values (a wall's base and top elevation) are computed on demand
+by pure queries such as `Project.wall_z_range`, with no cache. A value that is never
+stored cannot be stale, so propagation is correct by construction. The dependency graph
+and cached regeneration below are introduced when derived state becomes expensive to
+compute (wall joins, M3 onwards), behind the same queries. The reverse lookup that the
+graph needs already exists: `Project.walls_on_level`.
+
 1. A command runs inside a **transaction**. It edits parameters or references.
 2. Each edited element is marked dirty. The **dependency graph** gives everything that
    depends on it:

@@ -3,6 +3,42 @@
 One entry per working session: what was decided, what was verified, what is open. Newest
 first.
 
+## 2026-11-16: M2 walls bound to levels
+
+**Decided**
+
+- A wall stores its centre line (`start`, `end`), `thickness`, base level + offset, and
+  a top that is either a level + offset or an unconnected height. The two kinds of top
+  are separate types, so a wall cannot have both. The location line is fixed to the
+  centre line for now; other location lines would be a later, migrated addition.
+- Absolute elevations are derived on demand, not cached (see ARCHITECTURE, "Change
+  propagation"). The `regen/` module waits until joins need it.
+- Moving a level so that a wall's top would be at or below its base fails the whole
+  move, listing the walls. It is not a silent warning.
+- Walls have no name; users refer to them by a unique id prefix of at least four
+  characters (`bbim` shows eight), like short git hashes.
+- File format version 2 adds `walls`. Points are `[x, y]` arrays; the top is
+  `{"kind": "level", ...}` or `{"kind": "height", ...}`. Version 1's schema stays
+  published and frozen; a test checks both. The migration refuses a version 1 file that
+  already has a `walls` key rather than dropping it.
+
+**Verified**
+
+- 150 tests pass on Python 3.13 and 3.11; ruff and mypy strict clean.
+- Real CLI session on the file saved during M1 (a real version 1 file): it opened and
+  was upgraded; four walls added (to a top level with negative offset, between upper
+  levels, unconnected); moving "Primo piano" from 3.20 to 3.50 moved exactly the three
+  bound walls; moving it to 0 was refused naming both walls that would invert; deleting
+  it was refused naming its three walls; the saved file validates against
+  `schemas/bbim-2.schema.json`.
+- Found by that session: argparse took `-0,20` (negative, decimal comma) for an option.
+  `bbim` now rewrites such arguments to `-0.20` before parsing; tested.
+
+**Open**
+
+- An error about a wall that failed to be created mentions its id, which the user never
+  saw. Harmless, slightly confusing; revisit when error messages get a pass.
+
 ## 2026-11-16: M0 scaffolding and M1 project and levels
 
 **Decided**
