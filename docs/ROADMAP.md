@@ -130,8 +130,11 @@ and ortho, doors and windows by clicking a wall, select, move, delete.
       undoes.
 
 ### M12 3D view
-- [ ] Read-only 3D view with the technology chosen in M8, synchronised with the model:
-      raising a level in the plan updates the 3D.
+- [x] Read-only 3D view with the technology chosen in M8, synchronised with the model:
+      raising a level in the plan updates the 3D. Orbit, pan, zoom, fit, click to select
+      (shared with plan and browser); a clear message where OpenGL 3.3 is missing.
+- [ ] Follow-up: draw element edges and slabs, so storeys read apart (today walls of
+      stacked storeys merge visually).
 
 ### M13 IFC files as references
 Added on 2026-11-16 at the owner's request: BrunelleschiBIM exported IFC but could not

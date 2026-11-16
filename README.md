@@ -95,7 +95,7 @@ uv run ruff check       # lint
 uv run ruff format      # format
 uv run mypy             # type check
 uv run bbim --version   # the command-line tool
-uv run bbim-gui         # the desktop interface (work in progress, Phase 2)
+uv run bbim-gui         # the desktop interface: plan, 3D, editing (Phase 2, in progress)
 ```
 
 The interface needs the `gui` extra outside the development environment:

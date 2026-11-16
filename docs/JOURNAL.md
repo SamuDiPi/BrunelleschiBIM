@@ -3,6 +3,53 @@
 One entry per working session: what was decided, what was verified, what is open. Newest
 first.
 
+## 2026-11-16: M12 3D view
+
+**Decided**
+
+- Meshes are built by us (`geometry/solids.py`), not by exporting IFC and triangulating it
+  (ADR 0008 amendment): a wall is the prism of its joined footprint, sliced across at its
+  openings; slices are extruded over the heights no opening takes. Doors and windows are
+  boxes, as in the IFC. `regen/meshes.py` caches meshes per element and rebuilds only those
+  whose inputs changed.
+- Camera and picking are plain numpy (`gui/camera.py`): orbit around a target, pan, zoom,
+  fit; a click casts a ray against all triangles on the CPU (no OpenGL read-back), so
+  picking is tested without OpenGL.
+- Renderer: OpenGL 3.3 core with Qt's own classes (shader program, buffer, vertex array,
+  framebuffer); no PyOpenGL. One buffer for the whole model; the selected element is
+  tinted in the shader. The same renderer draws into an off-screen surface for captures
+  and tests (`render_offscreen`, `tools/render_3d.py`).
+- The 3D view sits next to the plan (splitter; View > 3D view, F3; Shift+F frames it).
+  Where an OpenGL 3.3 context cannot be created, the panel says so in words instead of
+  staying empty, and everything else works.
+
+**Verified**
+
+- 526 tests pass on Python 3.13 and 3.11; ruff and mypy strict clean.
+- Every mesh's volume equals IfcOpenShell's evaluation of the IFC export (house with
+  mitres, two tees, a door and two windows) to 1e-14 m3; meshes are closed (every directed
+  edge has its reverse).
+- Synchronisation in the window (pytest-qt): editing an elevation in the panel raises the
+  3D model, undo lowers it; a click on a wall in 3D selects it in panel and browser; a
+  click on the door picks the door, not the wall behind; dragging orbits without
+  selecting.
+- The drawing itself runs in a child process on the normal platform with an off-screen
+  surface: background in the corner, the house covering the image, the selected door
+  highlighted in blue. Skipped with its reason where OpenGL 3.3 is missing.
+- Looked at renders of a two-room, two-storey house and at a capture of the window.
+
+**Found**
+
+- Qt's offscreen platform has no OpenGL on Windows (checked before writing code), so
+  interface tests cannot draw 3D: the logic is tested there and the drawing in a child
+  process.
+- Without OpenGL the 3D panel was simply empty; it now explains why.
+- Stacked storeys merge into one block in 3D: with one colour and no edges, the floor
+  line cannot be seen. Drawing edges without the internal slice lines is not trivial;
+  recorded as a follow-up in the roadmap, not patched.
+- Performance on the 480-wall model: 0.54 s for all meshes, 0.13 s after one wall, 0.73 s
+  after moving a level; acceptable for now.
+
 ## 2026-11-16: IFC references moved into Phase 2; export from the window
 
 **Decided with the owner**
