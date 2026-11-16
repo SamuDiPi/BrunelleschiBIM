@@ -16,7 +16,9 @@ classifiers = [
 ]
 # Runtime dependencies are added by the milestone that first needs them
 # (see docs/ROADMAP.md), each pinned and recorded in an ADR.
-dependencies = []
+dependencies = [
+    "pydantic>=2.10,<3",
+]
 
 [project.scripts]
 bbim = "brunelleschi.cli:main"
@@ -26,9 +28,11 @@ Repository = "https://github.com/SamuDiPi/BrunelleschiBIM"
 
 [dependency-groups]
 dev = [
+    "jsonschema>=4.26.0",
     "mypy>=1.13",
     "pytest>=8",
     "ruff>=0.8",
+    "types-jsonschema>=4.26.0.20261006",
 ]
 
 [build-system]

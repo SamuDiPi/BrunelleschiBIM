@@ -1,0 +1,78 @@
+{
+  "$defs": {
+    "LevelV1": {
+      "additionalProperties": false,
+      "description": "A named elevation.",
+      "properties": {
+        "elevation": {
+          "description": "Elevation in metres from the project zero.",
+          "maximum": 1000000.0,
+          "minimum": -1000000.0,
+          "title": "Elevation",
+          "type": "number"
+        },
+        "id": {
+          "description": "Stable identifier of the level.",
+          "format": "uuid",
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "description": "Unique name, ignoring case.",
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "elevation"
+      ],
+      "title": "LevelV1",
+      "type": "object"
+    }
+  },
+  "$id": "https://github.com/SamuDiPi/BrunelleschiBIM/schemas/bbim-1.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "A BrunelleschiBIM project, schema version 1.",
+  "properties": {
+    "format": {
+      "const": "brunelleschi-project",
+      "description": "Identifies the file as a BrunelleschiBIM project.",
+      "title": "Format",
+      "type": "string"
+    },
+    "levels": {
+      "description": "Levels, in creation order.",
+      "items": {
+        "$ref": "#/$defs/LevelV1"
+      },
+      "title": "Levels",
+      "type": "array"
+    },
+    "name": {
+      "description": "Project name.",
+      "maxLength": 200,
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": 1,
+      "description": "Version of this file format.",
+      "title": "Schema Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "format",
+    "schema_version",
+    "name",
+    "levels"
+  ],
+  "title": "BrunelleschiBIM project file, schema version 1",
+  "type": "object"
+}
