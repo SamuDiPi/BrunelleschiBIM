@@ -25,14 +25,24 @@ dependencies = [
 [project.scripts]
 bbim = "brunelleschi.cli:main"
 
+[project.gui-scripts]
+bbim-gui = "brunelleschi.gui.app:main"
+
 [project.urls]
 Repository = "https://github.com/SamuDiPi/BrunelleschiBIM"
+
+[project.optional-dependencies]
+gui = [
+    "pyside6-essentials>=6.10,<7",
+]
 
 [dependency-groups]
 dev = [
     "jsonschema>=4.26.0",
     "mypy>=1.13",
+    "pyside6-essentials>=6.10,<7",
     "pytest>=8",
+    "pytest-qt>=4.4",
     "ruff>=0.8",
     "types-jsonschema>=4.26.0.20261006",
     "types-shapely>=2.1.0.20261030",
