@@ -95,8 +95,8 @@ get a valid IFC4 file and a plan in SVG.
 
 Goal (approved by the owner on 2026-11-16, who chose the interface before more model
 content): a desktop application that opens, edits and saves the Phase 1 model with the
-mouse, with undo, a 3D view, DXF export to CartesioCAD, rooms with the Italian checks,
-packaged as a standalone Windows executable.
+mouse, with undo, a 3D view, IFC files of others as references, DXF export to CartesioCAD,
+rooms with the Italian checks, packaged as a standalone Windows executable.
 
 Rules specific to this phase: the interface uses only `brunelleschi.api`; it is tested
 headless (pytest-qt) and looked at through window captures saved as images, never by
@@ -133,28 +133,39 @@ and ortho, doors and windows by clicking a wall, select, move, delete.
 - [ ] Read-only 3D view with the technology chosen in M8, synchronised with the model:
       raising a level in the plan updates the 3D.
 
-### M13 DXF export for CartesioCAD
+### M13 IFC files as references
+Added on 2026-11-16 at the owner's request: BrunelleschiBIM exported IFC but could not
+open one.
+- [ ] Open an IFC file (any authoring tool) as a reference: its elements appear in the
+      plan of the level they belong to and in the 3D view, read-only, as a background to
+      draw on; storeys are matched to our levels by elevation or name.
+- [ ] Large or unusual files load without blocking the interface; elements that cannot be
+      shown are counted and reported, not hidden.
+- [ ] Whether the reference is remembered in the `.bbim` file (a link) is decided with the
+      owner before it is coded (file format).
+
+### M14 DXF export for CartesioCAD
 - [ ] Editable plan in DXF: separate layers, cut walls as HATCH, doors and windows as
       blocks, at real size in metres or millimetres (to decide with CartesioCAD's units).
 - [ ] The file is read without errors by CartesioCAD's `DxfReader` and looked at as an
       image; `bbim plan --dxf` and a menu command.
 
-### M14 Rooms, areas and Italian checks
+### M15 Rooms, areas and Italian checks
 - [ ] Rooms derived from walls on a level: name, net area, perimeter, height; IfcSpace in
       the export; room tags in the plan.
 - [ ] Checks as warnings (CLI and interface): window-to-floor ratio of at least 1/8,
       minimum room areas and heights (DM 5 July 1975); thresholds verified with the
       owner on the text of the decree before they are coded.
 
-### M15 Executable and demonstration
+### M16 Executable and demonstration
 - [ ] A Windows executable that starts on a machine without Python, opens and edits the
       demo house, exports IFC, SVG and DXF.
 
 ## Later (not yet broken down)
 
 In rough order: wall types with layers; slabs and roofs; dimensions, room tags and title
-blocks in plans; schedules; sections and elevations; sheets; IFC import
-(non-parametric).
+blocks in plans; schedules; sections and elevations; sheets; IFC import as editable
+elements (simple walls, doors and windows first).
 
 ## Risks being tracked
 

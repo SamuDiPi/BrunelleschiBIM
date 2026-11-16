@@ -3,6 +3,27 @@
 One entry per working session: what was decided, what was verified, what is open. Newest
 first.
 
+## 2026-11-16: IFC references moved into Phase 2; export from the window
+
+**Decided with the owner**
+
+- The owner asked how to open IFC files: BrunelleschiBIM only exported them. Two levels
+  were explained: IFC as a read-only reference (reliable: IfcOpenShell reads and
+  triangulates nearly any IFC) and IFC converted into editable parametric elements (works
+  only for simple cases, a phase of its own). The owner chose references now: new M13
+  after the 3D view; DXF, rooms and the executable become M14, M15 and M16. Editable IFC
+  import stays in "Later".
+- File menu: "Export IFC..." and "Export plan as SVG..." (A3, first scale that fits among
+  1:50, 1:100, 1:200), added at once.
+
+**Found**
+
+- `write_ifc` on a missing folder silently created the folder (IfcOpenShell's `write`
+  does that). It now behaves like saving a project: the folder must exist, and the file is
+  written to a temporary file and replaced only when complete. Tested.
+- The owner asked how to start the program: today, by double-clicking
+  `.venv\Scripts\bbim-gui.exe` or with `uv run bbim-gui`; the standalone executable is M16.
+
 ## 2026-11-16: M11 editing in plan
 
 **Decided**
