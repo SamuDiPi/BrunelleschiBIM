@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="420mm" height="297mm" viewBox="0 0 420 297">
+<title>Prova pianta - Piano terra - 1:50</title>
+<style>
+.wall-projection{fill:none;stroke:#000000;stroke-width:0.18;stroke-linejoin:miter;stroke-linecap:butt}
+.wall-cut{fill:#a6a6a6;stroke:none;stroke-width:0;stroke-linejoin:miter;stroke-linecap:butt}
+.wall-cut-outline{fill:none;stroke:#000000;stroke-width:0.5;stroke-linejoin:miter;stroke-linecap:butt}
+.opening-above{fill:none;stroke:#000000;stroke-width:0.25;stroke-linejoin:miter;stroke-linecap:butt;stroke-dasharray:1.5 1}
+.window{fill:none;stroke:#000000;stroke-width:0.25;stroke-linejoin:miter;stroke-linecap:butt}
+.door{fill:none;stroke:#000000;stroke-width:0.35;stroke-linejoin:miter;stroke-linecap:butt}
+.door-swing{fill:none;stroke:#000000;stroke-width:0.18;stroke-linejoin:miter;stroke-linecap:butt}
+.text{font-family:sans-serif;fill:#000000;stroke:none}
+</style>
+<rect x="0" y="0" width="420" height="297" fill="#ffffff"/>
+<g id="wall-projection" class="wall-projection">
+<path d="M190.945 129.5 L250.945 129.5 L250.945 127.5 L190.945 127.5 Z" data-element="00000000-0000-0000-0000-000000000015"/>
+</g>
+<g id="wall-cut" class="wall-cut">
+<path d="M111.945 211.5 L111.945 205.5 L93.945 205.5 L93.945 91.5 L169.745 91.5 L169.745 140.5 L172.145 140.5 L172.145 91.5 L267.945 91.5 L267.945 108.5 L273.945 108.5 L273.945 85.5 L170.945 85.5 L87.945 85.5 L87.945 211.5 Z" fill-rule="evenodd"/>
+<path d="M169.745 205.5 L129.945 205.5 L129.945 211.5 L170.945 211.5 L206.945 211.5 L206.945 205.5 L172.145 205.5 L172.145 156.5 L169.745 156.5 Z" fill-rule="evenodd"/>
+<path d="M267.945 128.5 L267.945 205.5 L234.945 205.5 L234.945 211.5 L273.945 211.5 L273.945 148.904 L332.055 110.164 L329.836 106.836 L273.945 144.096 L273.945 128.5 Z" fill-rule="evenodd"/>
+</g>
+<g id="wall-cut-outline" class="wall-cut-outline">
+<path d="M111.945 211.5 L111.945 205.5 L93.945 205.5 L93.945 91.5 L169.745 91.5 L169.745 140.5 L172.145 140.5 L172.145 91.5 L267.945 91.5 L267.945 108.5 L273.945 108.5 L273.945 85.5 L170.945 85.5 L87.945 85.5 L87.945 211.5 Z"/>
+<path d="M169.745 205.5 L129.945 205.5 L129.945 211.5 L170.945 211.5 L206.945 211.5 L206.945 205.5 L172.145 205.5 L172.145 156.5 L169.745 156.5 Z"/>
+<path d="M267.945 128.5 L267.945 205.5 L234.945 205.5 L234.945 211.5 L273.945 211.5 L273.945 148.904 L332.055 110.164 L329.836 106.836 L273.945 144.096 L273.945 128.5 Z"/>
+</g>
+<g id="opening-above" class="opening-above">
+<path d="M138.945 85.5 L122.945 85.5 L122.945 91.5 L138.945 91.5 Z" data-element="00000000-0000-0000-0000-000000000029"/>
+</g>
+<g id="window" class="window">
+<path d="M206.945 205.5 L234.945 205.5" data-element="00000000-0000-0000-0000-000000000028"/>
+<path d="M206.945 208.5 L234.945 208.5" data-element="00000000-0000-0000-0000-000000000028"/>
+<path d="M206.945 211.5 L234.945 211.5" data-element="00000000-0000-0000-0000-000000000028"/>
+<path d="M267.945 128.5 L267.945 108.5" data-element="00000000-0000-0000-0000-00000000002a"/>
+<path d="M270.945 128.5 L270.945 108.5" data-element="00000000-0000-0000-0000-00000000002a"/>
+<path d="M273.945 128.5 L273.945 108.5" data-element="00000000-0000-0000-0000-00000000002a"/>
+</g>
+<g id="door" class="door">
+<path d="M111.945 205.5 L111.945 187.5" data-element="00000000-0000-0000-0000-00000000001e"/>
+<path d="M172.145 140.5 L188.145 140.5" data-element="00000000-0000-0000-0000-00000000001f"/>
+</g>
+<g id="door-swing" class="door-swing">
+<path d="M111.945 187.5 A18 18 0 0 1 129.945 205.5" data-element="00000000-0000-0000-0000-00000000001e"/>
+<path d="M188.145 140.5 A16 16 0 0 1 172.145 156.5" data-element="00000000-0000-0000-0000-00000000001f"/>
+</g>
+<g id="text" class="text">
+<text x="10" y="292" font-size="3.5">Prova pianta - Piano terra - 1:50</text>
+</g>
+</svg>

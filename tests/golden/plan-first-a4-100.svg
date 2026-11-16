@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="297mm" height="210mm" viewBox="0 0 297 210">
+<title>Prova pianta - Primo piano - 1:100</title>
+<style>
+.wall-projection{fill:none;stroke:#000000;stroke-width:0.18;stroke-linejoin:miter;stroke-linecap:butt}
+.wall-cut{fill:#a6a6a6;stroke:none;stroke-width:0;stroke-linejoin:miter;stroke-linecap:butt}
+.wall-cut-outline{fill:none;stroke:#000000;stroke-width:0.5;stroke-linejoin:miter;stroke-linecap:butt}
+.opening-above{fill:none;stroke:#000000;stroke-width:0.25;stroke-linejoin:miter;stroke-linecap:butt;stroke-dasharray:1.5 1}
+.window{fill:none;stroke:#000000;stroke-width:0.25;stroke-linejoin:miter;stroke-linecap:butt}
+.door{fill:none;stroke:#000000;stroke-width:0.35;stroke-linejoin:miter;stroke-linecap:butt}
+.door-swing{fill:none;stroke:#000000;stroke-width:0.18;stroke-linejoin:miter;stroke-linecap:butt}
+.text{font-family:sans-serif;fill:#000000;stroke:none}
+</style>
+<rect x="0" y="0" width="297" height="210" fill="#ffffff"/>
+<g id="wall-cut" class="wall-cut">
+<path d="M103.5 106.5 L193.5 106.5 L193.5 103.5 L103.5 103.5 Z" fill-rule="evenodd"/>
+</g>
+<g id="wall-cut-outline" class="wall-cut-outline">
+<path d="M103.5 106.5 L193.5 106.5 L193.5 103.5 L103.5 103.5 Z"/>
+</g>
+<g id="text" class="text">
+<text x="10" y="205" font-size="3.5">Prova pianta - Primo piano - 1:100</text>
+</g>
+</svg>

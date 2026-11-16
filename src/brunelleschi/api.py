@@ -28,9 +28,11 @@ from brunelleschi.commands import (
     set_level_elevation,
     transaction,
 )
+from brunelleschi.drawings import Sheet, plan_svg, plan_view, write_plan_svg
 from brunelleschi.errors import (
     AmbiguousReferenceError,
     BrunelleschiError,
+    DrawingError,
     ModelError,
     NotFoundError,
     ProjectFileError,
@@ -67,6 +69,7 @@ __all__ = [
     "AmbiguousReferenceError",
     "BrunelleschiError",
     "Door",
+    "DrawingError",
     "HostedElement",
     "Jamb",
     "Join",
@@ -79,6 +82,7 @@ __all__ = [
     "Point",
     "Project",
     "ProjectFileError",
+    "Sheet",
     "Side",
     "TopAtLevel",
     "UnconnectedHeight",
@@ -101,10 +105,13 @@ __all__ = [
     "modify_hosted",
     "modify_wall",
     "new_project",
+    "plan_svg",
+    "plan_view",
     "rename_level",
     "save",
     "set_level_elevation",
     "short_id",
     "transaction",
     "wall_geometry",
+    "write_plan_svg",
 ]

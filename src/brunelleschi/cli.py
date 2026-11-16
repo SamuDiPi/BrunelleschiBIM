@@ -393,6 +393,30 @@ def _cmd_ifc_validate(args: argparse.Namespace) -> int:
     return _print_validation(args.ifc)
 
 
+def _scale(text: str) -> float:
+    """``50`` or ``1:50``."""
+    value = text.split(":", 1)[1] if text.startswith("1:") else text
+    try:
+        scale = float(value.replace(",", "."))
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"not a scale: {text!r} (use 50 or 1:50)") from None
+    if not scale > 0:
+        raise argparse.ArgumentTypeError(f"the scale must be positive: {text!r}")
+    return scale
+
+
+def _cmd_plan(args: argparse.Namespace) -> int:
+    project = api.load(args.file)
+    sheet = api.Sheet(paper=args.paper, portrait=args.portrait, scale=args.scale)
+    level = project.level(args.level)
+    api.write_plan_svg(project, level.id, args.output, sheet, args.cut)
+    print(
+        f"wrote {args.output}: plan of {level.name!r} cut at {args.cut:.2f} m, "
+        f"1:{args.scale:g} on {sheet.label}"
+    )
+    return EXIT_OK
+
+
 def _cmd_schema(args: argparse.Namespace) -> int:
     schema = api.json_schema(args.schema_version)
     text = json.dumps(schema, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
@@ -449,6 +473,18 @@ def build_parser() -> argparse.ArgumentParser:
     p = isub.add_parser("validate", help="validate an IFC file (schema and rules)")
     p.add_argument("ifc", help="the .ifc file")
     p.set_defaults(func=_cmd_ifc_validate)
+
+    p = sub.add_parser("plan", help="draw the plan of a level as SVG, at a scale on paper")
+    p.add_argument("file", help="the .bbim project")
+    p.add_argument("level", help="level name")
+    p.add_argument("output", help="the .svg file to write")
+    p.add_argument(
+        "--cut", type=_metres, default=1.2, help="cut height above the level (default 1.20 m)"
+    )
+    p.add_argument("--scale", type=_scale, default=50.0, help="for example 50 or 1:50")
+    p.add_argument("--paper", default="A3", choices=["A4", "A3", "A2", "A1", "A0"])
+    p.add_argument("--portrait", action="store_true", help="portrait instead of landscape")
+    p.set_defaults(func=_cmd_plan)
 
     p = sub.add_parser("check", help="list geometric warnings (joins, openings)")
     p.add_argument("file")

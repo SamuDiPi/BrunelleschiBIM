@@ -19,6 +19,10 @@ class AmbiguousReferenceError(BrunelleschiError):
     """A short id matches more than one element; a longer prefix is needed."""
 
 
+class DrawingError(BrunelleschiError):
+    """A drawing cannot be produced as asked (it does not fit the sheet, bad options)."""
+
+
 class ProjectFileError(BrunelleschiError):
     """A project file cannot be read: wrong format, corrupt content or invalid data."""
 
