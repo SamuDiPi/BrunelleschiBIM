@@ -17,6 +17,7 @@ classifiers = [
 # Runtime dependencies are added by the milestone that first needs them
 # (see docs/ROADMAP.md), each pinned and recorded in an ADR.
 dependencies = [
+    "ifcopenshell==0.9.0.post1",
     "pydantic>=2.10,<3",
     "shapely>=2.1,<3",
 ]
@@ -70,3 +71,9 @@ select = [
 strict = true
 files = ["src", "tests"]
 warn_unreachable = true
+
+# IfcOpenShell is only partly typed; calls to it are confined to brunelleschi.ifc (ADR 0002)
+# and the IFC tests.
+[[tool.mypy.overrides]]
+module = ["brunelleschi.ifc.*", "tests.test_ifc", "test_ifc"]
+disallow_untyped_calls = false
