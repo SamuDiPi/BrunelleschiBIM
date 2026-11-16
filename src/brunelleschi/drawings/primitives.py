@@ -77,7 +77,62 @@ class Text:
     size: float
 
 
-Primitive = Area | Line | Arc
+Shape = Area | Line | Arc
+
+
+@dataclass(frozen=True, slots=True)
+class Block:
+    """A named symbol in its own coordinates (metres), drawn wherever it is inserted.
+
+    Doors and windows are blocks, so a DXF keeps them as reusable blocks (INSERT entities)
+    while SVG and the screen draw their expanded shapes. Same name, same content.
+    """
+
+    name: str
+    shapes: tuple[Shape, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class Insert:
+    """A block placed at ``position``, turned by ``rotation`` (radians, counter-clockwise),
+    after mirroring its y axis if ``mirror``."""
+
+    layer: str
+    block: Block
+    position: Vec
+    rotation: float
+    mirror: bool = False
+    element: UUID | None = None
+
+    def to_world(self, p: Vec) -> Vec:
+        x, y = p[0], -p[1] if self.mirror else p[1]
+        c, s = math.cos(self.rotation), math.sin(self.rotation)
+        return (self.position[0] + c * x - s * y, self.position[1] + s * x + c * y)
+
+    def expand(self) -> list[Shape]:
+        """The block's shapes in model coordinates, carrying this insert's element."""
+        out: list[Shape] = []
+        for shape in self.block.shapes:
+            if isinstance(shape, Line):
+                points = tuple(self.to_world(p) for p in shape.points)
+                out.append(Line(shape.layer, points, shape.closed, self.element))
+            elif isinstance(shape, Arc):
+                out.append(
+                    Arc(
+                        shape.layer,
+                        self.to_world(shape.centre),
+                        self.to_world(shape.start),
+                        self.to_world(shape.end),
+                        self.element,
+                    )
+                )
+            else:
+                rings = tuple(tuple(self.to_world(p) for p in ring) for ring in shape.rings)
+                out.append(Area(shape.layer, rings, self.element))
+        return out
+
+
+Primitive = Area | Line | Arc | Insert
 
 
 @dataclass(frozen=True, slots=True)
@@ -87,11 +142,18 @@ class Drawing:
     primitives: tuple[Primitive, ...]
     texts: tuple[Text, ...] = ()
 
+    def flat(self) -> list[Shape]:
+        """Every shape in model coordinates, with blocks expanded, in drawing order."""
+        out: list[Shape] = []
+        for p in self.primitives:
+            out.extend(p.expand() if isinstance(p, Insert) else [p])
+        return out
+
     def extent(self) -> tuple[float, float, float, float] | None:
         """(min x, min y, max x, max y) of every primitive, or None if empty."""
         xs: list[float] = []
         ys: list[float] = []
-        for p in self.primitives:
+        for p in self.flat():
             if isinstance(p, Area):
                 points = [pt for ring in p.rings for pt in ring]
             elif isinstance(p, Line):

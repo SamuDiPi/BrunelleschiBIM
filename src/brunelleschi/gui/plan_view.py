@@ -282,7 +282,7 @@ class PlanView(QWidget):
         painter.fillRect(self.rect(), QColor("white"))
         painter.setTransform(self.transform())
         self._paint_references(painter)
-        for primitive in self.drawing.primitives:
+        for primitive in self.drawing.flat():
             if isinstance(primitive, Area):
                 path = QPainterPath()
                 path.setFillRule(Qt.FillRule.OddEvenFill)

@@ -13,12 +13,22 @@ What is drawn, for a cut ``cut_height`` above the level:
 
 from __future__ import annotations
 
+import math
 from uuid import UUID
 
 from shapely import MultiPolygon, Polygon, unary_union
 from shapely.geometry.polygon import orient
 
-from brunelleschi.drawings.primitives import Arc, Area, Drawing, Line, Primitive, Vec
+from brunelleschi.drawings.primitives import (
+    Arc,
+    Area,
+    Block,
+    Drawing,
+    Insert,
+    Line,
+    Primitive,
+    Vec,
+)
 from brunelleschi.geometry.joins import WallLine
 from brunelleschi.model import LENGTH_TOLERANCE, Door, Jamb, Project, Side
 from brunelleschi.regen import wall_geometry
@@ -38,6 +48,32 @@ def _rings(polygon: Polygon) -> tuple[tuple[Vec, ...], ...]:
     p = orient(polygon, 1.0)
     rings = [p.exterior, *p.interiors]
     return tuple(tuple((float(x), float(y)) for x, y in ring.coords[:-1]) for ring in rings)
+
+
+def _mm(value: float) -> int:
+    return round(value * 1000)
+
+
+def door_block(width: float) -> Block:
+    """A door of ``width``: hinge at the origin, the leaf open along +y, its swing arc down
+    to the closed position on +x."""
+    return Block(
+        f"DOOR_{_mm(width)}",
+        (
+            Line("door", ((0.0, 0.0), (0.0, width))),
+            Arc("door-swing", (0.0, 0.0), (0.0, width), (width, 0.0)),
+        ),
+    )
+
+
+def window_block(width: float, wall_thickness: float) -> Block:
+    """A window of ``width`` in a wall of ``wall_thickness``, centred on the origin, the
+    wall along x: the two wall faces and the glass line."""
+    half_w, half_t = width / 2, wall_thickness / 2
+    return Block(
+        f"WINDOW_{_mm(width)}x{_mm(wall_thickness)}",
+        tuple(Line("window", ((-half_w, y), (half_w, y))) for y in (half_t, 0.0, -half_t)),
+    )
 
 
 def plan_view(
@@ -79,18 +115,36 @@ def plan_view(
         a, b = element.along()
         half = line.half
         if o.spans(z):
+            dx, dy = line.direction
             if isinstance(element, Door):
                 s = 1.0 if element.swing_side == Side.LEFT else -1.0
-                h, other = (a, b) if element.hinge == Jamb.START else (b, a)
-                hinge = _world(line, h, s * half)
-                tip = _world(line, h, s * (half + element.width))
-                closed = _world(line, other, s * half)
-                primitives.append(Line("door", (hinge, tip), False, element.id))
-                primitives.append(Arc("door-swing", hinge, tip, closed, element.id))
+                start_hinge = element.hinge == Jamb.START
+                h = a if start_hinge else b
+                # Block axes: x from the hinge towards the other jamb, y into the swing.
+                x_dir = (dx, dy) if start_hinge else (-dx, -dy)
+                y_dir = (-dy * s, dx * s)
+                mirror = x_dir[0] * y_dir[1] - x_dir[1] * y_dir[0] < 0
+                primitives.append(
+                    Insert(
+                        "door",
+                        door_block(element.width),
+                        _world(line, h, s * half),
+                        math.atan2(x_dir[1], x_dir[0]),
+                        mirror,
+                        element.id,
+                    )
+                )
             else:
-                for y in (half, 0.0, -half):
-                    points = (_world(line, a, y), _world(line, b, y))
-                    primitives.append(Line("window", points, False, element.id))
+                primitives.append(
+                    Insert(
+                        "window",
+                        window_block(element.width, line.thickness),
+                        _world(line, (a + b) / 2, 0.0),
+                        math.atan2(dy, dx),
+                        False,
+                        element.id,
+                    )
+                )
         elif o.z_bottom >= z:
             primitives.append(Line("opening-above", o.corners, True, element.id))
 

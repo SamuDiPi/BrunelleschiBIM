@@ -50,7 +50,7 @@ def house() -> api.Project:
 
 
 def layer(drawing: Drawing, name: str) -> list[Area | Line | Arc]:
-    return [p for p in drawing.primitives if p.layer == name]
+    return [p for p in drawing.flat() if p.layer == name]
 
 
 def close(a: tuple[float, float], b: tuple[float, float]) -> bool:

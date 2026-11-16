@@ -139,7 +139,7 @@ def to_svg(drawing: Drawing, sheet: Sheet, title: str = "") -> str:
     if title:
         texts.append(Text("text", (MARGIN, MARGIN / 2), title, TITLE_SIZE))
     for layer in LAYERS:
-        items = [p for p in drawing.primitives if p.layer == layer.name]
+        items = [p for p in drawing.flat() if p.layer == layer.name]
         layer_texts = [t for t in texts if t.layer == layer.name]
         if not items and not layer_texts:
             continue
