@@ -91,7 +91,10 @@ the owner's machine; 0.1 s to update after one change). A spatial index (Shapely
 4. Constraints are checked at commit. A violated constraint (a door wider than its wall,
    a top level below the base level) fails the transaction or is recorded as an explicit
    model warning. It is never ignored silently.
-5. On commit the transaction is recorded, which gives undo/redo later.
+5. On commit the transaction becomes one undo step: the difference between the snapshot
+   taken at its start and the new state (elements added, removed or changed, and the
+   element order when membership changed). Undo and redo apply it backwards or forwards
+   on the same element objects. The history lives in memory, per project, and is not saved.
 
 Example, "raise Level 1 by 0.30 m": the level is dirty, so the walls with base or top on
 Level 1 regenerate their Z extent, their hosted doors and windows keep their sill height

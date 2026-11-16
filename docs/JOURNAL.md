@@ -3,6 +3,44 @@
 One entry per working session: what was decided, what was verified, what is open. Newest
 first.
 
+## 2026-11-16: M9 undo and redo in the core
+
+**Decided**
+
+- One undo step per committed outermost transaction; nested transactions join it; failed
+  or empty transactions leave no step. Commands carry labels ("Add wall", "Change level
+  elevation", "Add level 'Roof'") for menu entries; an unlabelled transaction takes the
+  label of its first command.
+- A step stores only the difference from the snapshot the transaction already takes:
+  elements added, removed, changed (field values before and after), and the element
+  order of a store when its membership changed. Undo and redo restore values on the
+  same element objects and put deleted elements back in their position, so a saved file
+  after undo is byte-identical to the one before the change.
+- The history lives in memory per project (like the regeneration cache), is empty for a
+  project just created or loaded, is not saved, and has no length limit yet. The CLI has
+  no undo: each `bbim` call is its own process.
+- API: `undo`, `redo`, `can_undo`, `can_redo`, `undo_label`, `redo_label`,
+  `clear_history`. Undo inside a transaction is refused.
+- No new dependency for the property-based test: a seeded random generator instead of
+  Hypothesis.
+
+**Verified**
+
+- 457 tests pass on Python 3.13 and 3.11; ruff and mypy strict clean.
+- 150 seeded random sequences of 40 operations (valid and invalid on purpose, including
+  batches): after every operation the file and the element identities match the state
+  recorded for that history position; undo all, redo all and a random undo/redo walk
+  revisit exactly the recorded states.
+- The first version of the generator was weak: sequences ended with 0.6 walls and 0.1
+  doors on average, so doors and cascading deletes were barely exercised. Measured,
+  then reworked: now 23 steps, 4.3 walls and 2.6 doors/windows on average, every
+  command kind present.
+- Mutation check: deliberately breaking the order restoration, and separately the object
+  identity, both make the test fail.
+- Real API session: built the room in one labelled transaction, added a door, raised the
+  first floor, deleted a wall with its door; undid all six steps and redid them, with the
+  expected state and labels at each step and the same wall object back.
+
 ## 2026-11-16: M8 spikes, 3D view and packaging
 
 **Verified (details and numbers in ADRs 0008 and 0009, scripts in `spikes/m8/`)**

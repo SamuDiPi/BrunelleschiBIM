@@ -113,8 +113,8 @@ and ortho, doors and windows by clicking a wall, select, move, delete.
       PyInstaller one-folder); ADR 0005 updated.
 
 ### M9 Undo and redo in the core
-- [ ] Every command can be undone and redone through the API; a transaction is one step.
-- [ ] Property-based test: random command sequences, undo all gives the initial file
+- [x] Every command can be undone and redone through the API; a transaction is one step.
+- [x] Property-based test: random command sequences, undo all gives the initial file
       bytes, redo all gives the final ones.
 
 ### M10 Main window
