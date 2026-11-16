@@ -69,11 +69,11 @@ select = [
 
 [tool.mypy]
 strict = true
-files = ["src", "tests"]
+files = ["src", "tests", "examples"]
 warn_unreachable = true
 
 # IfcOpenShell is only partly typed; calls to it are confined to brunelleschi.ifc (ADR 0002)
 # and the IFC tests.
 [[tool.mypy.overrides]]
-module = ["brunelleschi.ifc.*", "tests.test_ifc", "test_ifc"]
+module = ["brunelleschi.ifc.*", "tests.test_ifc", "test_ifc", "tests.test_demo", "test_demo"]
 disallow_untyped_calls = false
